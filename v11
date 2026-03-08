@@ -1,0 +1,1766 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>NAQI Command Platform v6</title>
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=Space+Mono:wght@400;700&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+:root{--bg0:#020b16;--bg1:#050d1a;--bg2:#091220;--bg3:#0d1829;--bg4:#111e33;--b1:#132338;--b2:#1a2f4a;--b3:#21405f;--t1:#eef6ff;--t2:#aacae8;--t3:#5a8ab5;--t4:#2d5070;--c1:#00f5c3;--c2:#2196f3;--c3:#ff9f1c;--c4:#ff3860;--c5:#a855f7;--c6:#4ade80;--c7:#06b6d4;--c8:#f97316;--c9:#ec4899;--c10:#84cc16;--green:#4ade80;--amber:#ff9f1c;--red:#ff3860;--blue:#2196f3;--card1:rgba(9,18,32,.9);--card2:rgba(13,24,41,.95);--display:'Syne',sans-serif;--mono:'Space Mono',monospace;--body:'Inter',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg0);color:var(--t1);font-family:var(--body);font-size:13px;min-height:100vh;overflow-x:hidden}
+
+/* SPLASH */
+#splash{position:fixed;inset:0;background:var(--bg0);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s}
+#splash.hide{opacity:0;pointer-events:none}
+.sp-logo{font-size:48px;margin-bottom:8px}
+.sp-title{font-family:var(--display);font-size:26px;font-weight:800;background:linear-gradient(135deg,var(--c1),var(--c6),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sp-sub{font-size:11px;color:var(--t3);letter-spacing:2px;text-transform:uppercase;margin-top:4px}
+.sp-bar{width:300px;height:3px;background:var(--b2);border-radius:2px;margin-top:28px;overflow:hidden}
+.sp-fill{height:100%;background:linear-gradient(90deg,var(--c1),var(--c6));border-radius:2px;animation:spf 2.4s ease-out forwards}
+@keyframes spf{from{width:0}to{width:100%}}
+.sp-feats{display:flex;flex-wrap:wrap;gap:8px;margin-top:20px;justify-content:center;max-width:420px}
+.sp-feat{font-size:9px;font-weight:600;letter-spacing:.5px;text-transform:uppercase;color:var(--t2);background:var(--b1);border:1px solid var(--b2);padding:4px 10px;border-radius:20px}
+
+/* TOPBAR */
+#topbar{position:sticky;top:0;z-index:100;background:rgba(2,11,22,.97);backdrop-filter:blur(20px);border-bottom:1px solid var(--b2);padding:0 16px;display:flex;align-items:center;gap:12px;height:52px}
+.tb-mark{font-size:22px}
+.tb-name{font-family:var(--display);font-size:14px;font-weight:800;background:linear-gradient(135deg,var(--c1),var(--c2));-webkit-background-clip:text;-webkit-text-fill-color:transparent;white-space:nowrap}
+.tb-sub{font-size:8px;color:var(--t3);letter-spacing:1px;white-space:nowrap}
+.tb-div{width:1px;height:30px;background:var(--b2);flex-shrink:0}
+.tb-kpis{display:flex;gap:6px;flex:1;overflow-x:auto;scrollbar-width:none}
+.tb-kpis::-webkit-scrollbar{display:none}
+.tb-kpi{background:var(--bg3);border:1px solid var(--b2);border-radius:8px;padding:4px 9px;white-space:nowrap;min-width:100px}
+.tb-kpi-l{font-size:7.5px;color:var(--t3);letter-spacing:.5px;text-transform:uppercase}
+.tb-kpi-v{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--c1)}
+
+/* MULTI-CURRENCY BADGE */
+.curr-badge{font-size:8px;color:var(--t3);font-family:var(--mono)}
+
+.save-ind{display:flex;align-items:center;gap:5px;font-size:9px;color:var(--t3);white-space:nowrap}
+.save-dot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 5px var(--green)}
+.save-dot.saving{background:var(--amber);animation:pulse .7s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+.tb-acts{display:flex;gap:5px;align-items:center}
+
+/* UNDO BAR */
+#undo-bar{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);background:var(--card2);border:1px solid var(--b2);border-radius:30px;padding:7px 14px;font-size:10px;display:flex;gap:10px;align-items:center;z-index:500;opacity:0;transition:opacity .3s;pointer-events:none;box-shadow:0 4px 16px rgba(0,0,0,.4)}
+#undo-bar.show{opacity:1;pointer-events:all}
+
+/* TABBAR */
+#tabbar{background:var(--bg1);border-bottom:1px solid var(--b1);padding:0 16px;display:flex;gap:1px;overflow-x:auto;scrollbar-width:none;position:sticky;top:52px;z-index:90}
+#tabbar::-webkit-scrollbar{display:none}
+.tab{padding:10px 13px;font-family:var(--body);font-size:10.5px;font-weight:500;color:var(--t3);background:none;border:none;border-bottom:2px solid transparent;cursor:pointer;white-space:nowrap;transition:all .2s}
+.tab:hover{color:var(--t2)}
+.tab.active{color:var(--c1);border-bottom-color:var(--c1)}
+.tnew{font-size:7px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;background:linear-gradient(135deg,var(--c1),var(--c6));color:#000;padding:1px 4px;border-radius:2px;margin-left:3px;vertical-align:middle}
+.tbadge{display:inline-block;background:var(--b2);color:var(--t3);font-size:8px;font-weight:600;padding:1px 5px;border-radius:8px;margin-left:3px}
+
+/* MAIN */
+#main{min-height:calc(100vh - 104px)}
+.page{display:none;padding:18px;max-width:1700px;margin:0 auto}
+.page.active{display:block}
+
+/* GRID */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+.g4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.g5{display:grid;grid-template-columns:repeat(5,1fr);gap:10px}
+.gc2{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+.gc3{display:grid;grid-template-columns:2fr 1fr 1fr;gap:14px}
+.mb{margin-bottom:14px}
+
+/* CARDS */
+.card{background:var(--card1);border:1px solid var(--b2);border-radius:10px;padding:14px}
+.c-tl{border-top:2px solid var(--c1)}
+.c-bl{border-top:2px solid var(--blue)}
+.c-am{border-top:2px solid var(--amber)}
+.c-gn{border-top:2px solid var(--green)}
+.c-pu{border-top:2px solid var(--c5)}
+.c-rd{border-top:2px solid var(--red)}
+.c-cy{border-top:2px solid var(--c7)}
+.card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px;gap:8px}
+.card-title{font-family:var(--display);font-size:11.5px;font-weight:700;color:var(--t1)}
+
+/* SECTION HEADER */
+.sec{display:flex;align-items:center;gap:10px;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--b1)}
+.acc{font-family:var(--display);font-size:17px;font-weight:800;background:linear-gradient(135deg,var(--t1),var(--t2));-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+
+/* KPI CARDS */
+.kpi{background:var(--bg3);border:1px solid var(--b2);border-radius:10px;padding:13px 15px;position:relative;overflow:hidden}
+.kpi::before{content:'';position:absolute;top:0;left:0;right:0;height:2px}
+.kc1::before{background:linear-gradient(90deg,var(--c1),var(--c7))}
+.kc2::before{background:linear-gradient(90deg,var(--blue),var(--c7))}
+.kc3::before{background:linear-gradient(90deg,var(--amber),var(--c8))}
+.kc5::before{background:linear-gradient(90deg,var(--c5),var(--c9))}
+.kc6::before{background:linear-gradient(90deg,var(--green),var(--c1))}
+.kl{font-size:8.5px;font-weight:600;letter-spacing:.8px;text-transform:uppercase;color:var(--t3);margin-bottom:5px}
+.kv{font-family:var(--mono);font-size:20px;font-weight:700;color:var(--c1);line-height:1.1}
+.ks{font-size:8.5px;color:var(--t3);margin-top:3px}
+.kpi-mc{display:flex;gap:6px;margin-top:5px;flex-wrap:wrap}
+.kpi-curr{font-size:8px;font-family:var(--mono);color:var(--t4);background:var(--b1);padding:2px 6px;border-radius:3px}
+
+/* TABLES */
+.tw{overflow-x:auto}
+.tbl{width:100%;border-collapse:collapse;font-size:11px}
+.tbl th{background:var(--bg3);color:var(--t3);font-weight:600;font-size:9px;letter-spacing:.5px;text-transform:uppercase;padding:7px 9px;text-align:left;border-bottom:1px solid var(--b2)}
+.tbl td{padding:6px 9px;border-bottom:1px solid var(--b1);vertical-align:middle}
+.tbl tr:last-child td{border-bottom:none}
+.tbl tr:hover td{background:var(--bg3)}
+.tbl tr.tt td{background:var(--bg3);font-weight:600;border-top:1px solid var(--b2)}
+.h220{max-height:220px;overflow-y:auto}
+.h280{max-height:280px;overflow-y:auto}
+.h340{max-height:340px;overflow-y:auto}
+.h400{max-height:400px;overflow-y:auto}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;gap:5px;padding:6px 11px;border-radius:7px;border:none;cursor:pointer;font-family:var(--body);font-size:10.5px;font-weight:500;transition:all .18s;white-space:nowrap}
+.btn-xs{padding:3px 7px;font-size:9.5px}
+.btn-sm{padding:4px 9px;font-size:10px}
+.btn-icon{padding:6px 8px}
+.btl{background:var(--c1);color:#000;font-weight:700}
+.btl:hover{filter:brightness(1.1)}
+.bsc{background:var(--b2);color:var(--t2)}
+.bsc:hover{background:var(--b3)}
+.bpr{background:rgba(0,245,195,.1);color:var(--c1);border:1px solid rgba(0,245,195,.2)}
+.bpr:hover{background:rgba(0,245,195,.18)}
+.berr{background:rgba(255,56,96,.1);color:var(--red);border:1px solid rgba(255,56,96,.2)}
+.berr:hover{background:rgba(255,56,96,.18)}
+.bgr{background:rgba(74,222,128,.1);color:var(--green);border:1px solid rgba(74,222,128,.2)}
+.bpu{background:rgba(168,85,247,.1);color:var(--c5);border:1px solid rgba(168,85,247,.2)}
+.bamb{background:rgba(255,159,28,.1);color:var(--amber);border:1px solid rgba(255,159,28,.2)}
+.btn-add{display:flex;align-items:center;gap:6px;padding:7px 11px;background:rgba(0,245,195,.06);border:1px dashed rgba(0,245,195,.25);border-radius:7px;color:var(--c1);font-size:10.5px;cursor:pointer;width:100%;transition:all .18s;font-family:var(--body)}
+.btn-add:hover{background:rgba(0,245,195,.12)}
+.btn-rm{background:none;border:none;color:var(--t4);cursor:pointer;padding:3px 5px;border-radius:4px;font-size:13px;line-height:1;transition:all .18s}
+.btn-rm:hover{color:var(--red);background:rgba(255,56,96,.1)}
+
+/* INPUTS */
+.inp,.sel,.ixs{background:var(--bg3);border:1px solid var(--b2);border-radius:6px;color:var(--t1);font-family:var(--body);font-size:11px;padding:6px 9px;width:100%;transition:border-color .18s;outline:none}
+.inp:focus,.sel:focus,.ixs:focus{border-color:var(--c1)}
+.ixs{background:transparent;border:1px solid transparent;border-radius:4px;padding:2px 5px}
+.ixs:hover{border-color:var(--b2);background:var(--bg3)}
+.ixs:focus{border-color:var(--c1);background:var(--bg3)}
+
+/* BADGES */
+.bdg{display:inline-block;padding:2px 7px;border-radius:20px;font-size:8.5px;font-weight:600;letter-spacing:.3px}
+.btl.bdg,.bdg.btl{background:rgba(0,245,195,.15);color:var(--c1)}
+.bok{background:rgba(74,222,128,.15);color:var(--green)}
+.bwarn{background:rgba(255,159,28,.15);color:var(--amber)}
+.berr.bdg,.bdg.berr{background:rgba(255,56,96,.15);color:var(--red)}
+.binfo{background:rgba(33,150,243,.15);color:var(--blue)}
+.bpu.bdg,.bdg.bpu{background:rgba(168,85,247,.15);color:var(--c5)}
+
+/* CHARTS */
+.cw{position:relative;height:200px}
+.cw-tall{height:260px}
+.cw-sm{height:150px}
+.cw canvas{max-height:100%}
+
+/* CALLOUTS */
+.cl{font-size:10.5px;color:var(--t2);background:var(--bg3);border-radius:8px;padding:10px 13px;line-height:1.5}
+.cl-info{border-left:3px solid var(--blue)}
+.cl-ok{border-left:3px solid var(--green)}
+.cl-warn{border-left:3px solid var(--amber)}
+
+/* SEPARATORS */
+.sep{height:1px;background:var(--b1);margin:12px 0}
+
+/* DRILLDOWNS */
+.dh{display:flex;gap:6px;align-items:center;font-size:8px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;color:var(--t3);padding:5px 2px;border-bottom:1px solid var(--b1);margin-bottom:2px}
+.dh.cx,.dh.ox{grid-template-columns:none}
+.dh span,.dh div{flex:1}
+.dr-tot{font-family:var(--mono);font-size:10.5px;font-weight:700;color:var(--c1);padding:7px 4px;border-top:1px solid var(--b2);margin-top:4px}
+.drg-row{display:flex;gap:5px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.drg-row:last-child{border-bottom:none}
+.drg-sk{display:grid;grid-template-columns:1fr .5fr .8fr .5fr 1fr .7fr .7fr 30px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.drg-mkt{display:grid;grid-template-columns:.6fr .5fr .8fr .8fr .8fr .8fr .5fr 1fr 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.drg-cond{display:grid;grid-template-columns:1.2fr .6fr .5fr .5fr 1fr 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.drg-comp-p{display:grid;grid-template-columns:.8fr 1fr .5fr .7fr .7fr 1fr 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.drg-rfq{display:grid;grid-template-columns:90px 1fr 1fr 70px 70px 70px 85px 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.dh.mkt{grid-template-columns:.6fr .5fr .8fr .8fr .8fr .8fr .5fr 1fr 28px;display:grid}
+.dh.cond{grid-template-columns:1.2fr .6fr .5fr .5fr 1fr 28px;display:grid}
+.dh.comp-p{grid-template-columns:.8fr 1fr .5fr .7fr .7fr 1fr 28px;display:grid}
+.dh.rfq{grid-template-columns:90px 1fr 1fr 70px 70px 70px 85px 28px;display:grid}
+.dh.ord{grid-template-columns:60px 1.2fr .8fr .5fr .9fr .8fr 28px;display:grid}
+.drg-ord{display:grid;grid-template-columns:60px 1.2fr .8fr .5fr .9fr .8fr 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.dh.hr{grid-template-columns:1.5fr .8fr .4fr .7fr .7fr 28px;display:grid}
+.drg-hr{display:grid;grid-template-columns:1.5fr .8fr .4fr .7fr .7fr 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.dh.cx{grid-template-columns:2fr .8fr .8fr .8fr 28px;display:grid}
+.drg-cx{display:grid;grid-template-columns:2fr .8fr .8fr .8fr 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.dh.ox{grid-template-columns:2fr .8fr .8fr .8fr 28px;display:grid}
+.drg-ox{display:grid;grid-template-columns:2fr .8fr .8fr .8fr 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.dh.rm{grid-template-columns:2fr .7fr .7fr .7fr .7fr 28px;display:grid}
+.drg-rm{display:grid;grid-template-columns:2fr .7fr .7fr .7fr .7fr 28px;gap:4px;align-items:center;padding:4px 0;border-bottom:1px solid var(--b1)}
+.dh.sk{grid-template-columns:1fr .5fr .8fr .5fr 1fr .7fr .7fr 30px;display:grid}
+
+/* SLIDERS */
+.slrow{display:flex;align-items:center;gap:8px;margin-bottom:7px}
+.sllbl{font-size:9.5px;color:var(--t2);min-width:140px}
+.slinp{flex:1;-webkit-appearance:none;height:3px;border-radius:2px;background:var(--b2);outline:none;cursor:pointer}
+.slinp::-webkit-slider-thumb{-webkit-appearance:none;width:13px;height:13px;border-radius:50%;background:var(--c1);cursor:pointer;box-shadow:0 0 5px rgba(0,245,195,.5)}
+.slval{font-family:var(--mono);font-size:9px;color:var(--c1);min-width:60px;text-align:right}
+
+/* TOASTS */
+#toasts{position:fixed;top:58px;right:14px;z-index:999;display:flex;flex-direction:column;gap:7px;max-width:300px}
+.toast{background:var(--card2);border:1px solid var(--b2);border-radius:10px;padding:9px 12px;display:flex;align-items:flex-start;gap:8px;box-shadow:0 4px 18px rgba(0,0,0,.5);animation:toIn .3s ease;border-left:3px solid}
+.toast.ok{border-left-color:var(--green)}.toast.warn{border-left-color:var(--amber)}.toast.err{border-left-color:var(--red)}.toast.info{border-left-color:var(--blue)}
+@keyframes toIn{from{opacity:0;transform:translateX(14px)}to{opacity:1;transform:translateX(0)}}
+.toast-body{flex:1}.toast-t{font-size:10px;font-weight:600;margin-bottom:1px}.toast-m{font-size:8.5px;color:var(--t2)}
+.toast-x{background:none;border:none;color:var(--t3);cursor:pointer;font-size:13px;flex-shrink:0}
+
+/* MODALS */
+.modal-ov{position:fixed;inset:0;background:rgba(0,0,0,.65);backdrop-filter:blur(5px);z-index:800;display:none;align-items:center;justify-content:center}
+.modal-ov.show{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--b2);border-radius:14px;padding:22px;min-width:320px;max-width:620px;max-height:82vh;overflow-y:auto;width:90%;box-shadow:0 20px 60px rgba(0,0,0,.6)}
+.modal-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;font-family:var(--display);font-size:14px;font-weight:700}
+
+/* SUP CARD */
+.sup-card{background:var(--bg3);border:1px solid var(--b2);border-radius:10px;padding:13px;margin-bottom:9px}
+
+/* SWOT */
+.swot-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.swot-s,.swot-w,.swot-o,.swot-t{border-radius:10px;padding:12px}
+.swot-s{background:rgba(74,222,128,.05);border:1px solid rgba(74,222,128,.17)}
+.swot-w{background:rgba(255,56,96,.05);border:1px solid rgba(255,56,96,.17)}
+.swot-o{background:rgba(33,150,243,.05);border:1px solid rgba(33,150,243,.17)}
+.swot-t{background:rgba(255,159,28,.05);border:1px solid rgba(255,159,28,.17)}
+.swot-title{font-family:var(--display);font-size:10.5px;font-weight:700;margin-bottom:8px;display:flex;align-items:center;gap:5px}
+.swot-item{font-size:10px;color:var(--t1);margin-bottom:4px;display:flex;gap:5px}
+.swot-item::before{content:"›";color:var(--t3);flex-shrink:0}
+
+/* DSCR */
+.dscr-box{border-radius:10px;padding:14px;border:2px solid;text-align:center}
+.dscr-ok{background:rgba(74,222,128,.06);border-color:rgba(74,222,128,.35)}
+.dscr-warn{background:rgba(255,159,28,.06);border-color:rgba(255,159,28,.35)}
+.dscr-bad{background:rgba(255,56,96,.06);border-color:rgba(255,56,96,.35)}
+
+/* MIX BADGE */
+.mix-bdg{font-size:8px;padding:2px 6px;border-radius:8px;font-weight:600;margin-left:6px;display:inline-flex}
+
+/* SNAP ITEM */
+.snap-item{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--b1)}
+.snap-item:last-child{border-bottom:none}
+
+/* WHAT-IF PANEL (v6 NEW) */
+.whatif-box{background:linear-gradient(135deg,rgba(0,245,195,.04),rgba(33,150,243,.04));border:1px solid rgba(0,245,195,.15);border-radius:10px;padding:16px}
+.whatif-result{font-family:var(--mono);font-size:26px;font-weight:700;color:var(--c6);margin:8px 0 4px;line-height:1}
+.whatif-sub{font-size:9px;color:var(--t3)}
+.whatif-row{display:flex;gap:10px;align-items:center;margin-bottom:10px}
+.whatif-lbl{font-size:10px;color:var(--t2);min-width:160px}
+
+/* CURRENCY CONVERTER (v6 NEW) */
+.conv-panel{background:var(--bg3);border:1px solid var(--b2);border-radius:10px;padding:14px}
+.conv-inp-row{display:flex;align-items:center;gap:8px;margin-bottom:10px}
+.conv-flag{font-size:20px}
+.conv-amount{font-family:var(--mono);font-size:14px;font-weight:700}
+.conv-currency{font-size:9px;color:var(--t3);letter-spacing:.5px}
+.conv-result{background:var(--bg2);border-radius:8px;padding:10px 12px;margin-top:8px}
+.conv-res-row{display:flex;justify-content:space-between;align-items:center;padding:5px 0;border-bottom:1px solid var(--b1)}
+.conv-res-row:last-child{border-bottom:none}
+.conv-res-val{font-family:var(--mono);font-size:13px;font-weight:700;color:var(--c1)}
+.conv-res-lbl{font-size:9px;color:var(--t3)}
+
+/* PRINT (v6 ENHANCED) */
+@media print{
+  #splash,#topbar,#tabbar,#toasts,#undo-bar,.modal-ov,.btn-add,.btn-rm,.btn{display:none!important}
+  .page{display:block!important;page-break-inside:avoid}
+  body{background:#fff;color:#111;font-size:11px}
+  .card{border:1px solid #ccc;background:#f8f9fa;break-inside:avoid}
+  .kpi{border:1px solid #ddd;background:#f0f0f0}
+  .tbl th{background:#e9ecef;color:#495057}
+  .tbl td{color:#212529}
+  :root{--t1:#212529;--t2:#495057;--t3:#868e96;--bg0:#fff;--bg1:#fff;--bg2:#f8f9fa;--bg3:#e9ecef;--b1:#dee2e6;--b2:#ced4da;--c1:#0066cc;--c6:#1a7a3c;--amber:#b35900}
+  .g2,.g3,.g4,.g5{grid-template-columns:1fr 1fr}
+  .g5{grid-template-columns:repeat(3,1fr)}
+  h2,.acc{color:#212529!important;-webkit-text-fill-color:#212529!important}
+}
+
+/* MISC */
+@media(max-width:900px){.g4{grid-template-columns:1fr 1fr}.g5{grid-template-columns:1fr 1fr}.gc2,.gc3{grid-template-columns:1fr}}
+@media(max-width:600px){.g2,.g3,.g4,.g5{grid-template-columns:1fr}.tb-kpis{display:none}}
+::-webkit-scrollbar{width:4px;height:4px}::-webkit-scrollbar-track{background:var(--bg1)}::-webkit-scrollbar-thumb{background:var(--b3);border-radius:3px}
+</style>
+</head>
+<body>
+<div id="splash">
+  <div class="sp-logo">💧</div>
+  <div class="sp-title">NAQI Command Platform v6</div>
+  <div class="sp-sub">Syria Water Factory · CEO Intelligence System</div>
+  <div class="sp-bar"><div class="sp-fill"></div></div>
+  <div class="sp-feats">
+    <span class="sp-feat">5 Bugs Fixed</span><span class="sp-feat">What-If Calculator</span>
+    <span class="sp-feat">Currency Converter</span><span class="sp-feat">Real Waterfall</span>
+    <span class="sp-feat">Multi-Currency KPIs</span><span class="sp-feat">PDF Print</span>
+  </div>
+</div>
+<div id="toasts"></div>
+<div id="undo-bar"><span id="undo-msg">Change applied</span><button class="btn bsc btn-xs" onclick="doUndo()">&#8617; Undo</button><button class="btn bsc btn-xs" onclick="doRedo()">&#8618; Redo</button></div>
+
+<div class="modal-ov" id="snap-modal">
+  <div class="modal">
+    <div class="modal-head">Snapshots<button style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:18px" onclick="closeModal('snap-modal')">x</button></div>
+    <div style="display:flex;gap:6px;margin-bottom:10px"><input class="inp" id="snap-inp" placeholder="Name this snapshot..." style="flex:1"><button class="btn bpr btn-sm" onclick="saveSnap()">Save</button></div>
+    <div id="snap-list"></div>
+  </div>
+</div>
+<div class="modal-ov" id="alert-modal">
+  <div class="modal" style="max-width:540px">
+    <div class="modal-head">KPI Alerts<button style="background:none;border:none;color:var(--t3);cursor:pointer;font-size:18px" onclick="closeModal('alert-modal')">x</button></div>
+    <div id="alert-cfg"></div>
+    <button class="btn bsc btn-sm" style="margin-top:8px" onclick="addAlertCfg()">+ Add Alert</button>
+  </div>
+</div>
+
+<div id="topbar">
+  <div class="tb-mark">&#x1F4A7;</div>
+  <div><div class="tb-name">NAQI Command Platform</div><div class="tb-sub">Syria Water Factory v6</div></div>
+  <div class="tb-div"></div>
+  <div class="tb-kpis">
+    <div class="tb-kpi"><div class="tb-kpi-l">Net Profit/Mo</div><div class="tb-kpi-v" id="hkpi-profit">--</div><div style="font-size:8px;color:var(--t4);font-family:var(--mono)" id="hkpi-profit-mc">--</div></div>
+    <div class="tb-kpi"><div class="tb-kpi-l">Revenue/Mo</div><div class="tb-kpi-v" id="hkpi-rev" style="color:var(--c2)">--</div><div style="font-size:8px;color:var(--t4);font-family:var(--mono)" id="hkpi-rev-mc">--</div></div>
+    <div class="tb-kpi"><div class="tb-kpi-l">CAPEX</div><div class="tb-kpi-v" id="hkpi-capex" style="color:var(--c3)">--</div></div>
+    <div class="tb-kpi"><div class="tb-kpi-l">Payback</div><div class="tb-kpi-v" id="hkpi-pay" style="color:var(--c5)">--</div></div>
+    <div class="tb-kpi"><div class="tb-kpi-l">10yr IRR</div><div class="tb-kpi-v" id="hkpi-irr" style="color:var(--c6)">--</div></div>
+    <div class="tb-kpi"><div class="tb-kpi-l">DSCR</div><div class="tb-kpi-v" id="hkpi-dscr">--</div></div>
+    <div class="tb-kpi"><div class="tb-kpi-l">Bottles/Mo</div><div class="tb-kpi-v" id="hkpi-btl" style="color:var(--c3)">--</div></div>
+  </div>
+  <div class="save-ind"><div class="save-dot" id="sdot"></div><span id="stxt">Saved</span></div>
+  <div class="tb-div"></div>
+  <div class="tb-acts">
+    <button class="btn bsc btn-icon" title="Undo Ctrl+Z" onclick="doUndo()">&#8617;</button>
+    <button class="btn bsc btn-icon" title="Redo Ctrl+Y" onclick="doRedo()">&#8618;</button>
+    <button class="btn bsc btn-sm" onclick="openModal('snap-modal');renderSnaps()">Snaps</button>
+    <button class="btn bsc btn-sm" onclick="openModal('alert-modal');renderAlertCfg()">Alerts</button>
+    <button class="btn bsc btn-sm" onclick="exportJSON()">Export</button>
+    <button class="btn bsc btn-sm" onclick="$('imp').click()">Import</button>
+    <button class="btn bsc btn-icon" onclick="window.print()" title="Print PDF">Print</button>
+  </div>
+</div>
+<input type="file" id="imp" accept=".json" style="display:none" onchange="handleImport(this)">
+
+<div id="tabbar">
+  <button class="tab active" onclick="showTab(0)">Dashboard</button>
+  <button class="tab" onclick="showTab(1)">Market</button>
+  <button class="tab" onclick="showTab(2)">Competition</button>
+  <button class="tab" onclick="showTab(3)">Assumptions</button>
+  <button class="tab" onclick="showTab(4)">CAPEX <span class="tbadge" id="tb-cx">22</span></button>
+  <button class="tab" onclick="showTab(5)">OPEX <span class="tbadge" id="tb-ox">24</span></button>
+  <button class="tab" onclick="showTab(6)">HR <span class="tbadge" id="tb-hr">11</span></button>
+  <button class="tab" onclick="showTab(7)">Production</button>
+  <button class="tab" onclick="showTab(8)">Materials <span class="tbadge" id="tb-rm">11</span></button>
+  <button class="tab" onclick="showTab(9)">P&amp;L</button>
+  <button class="tab" onclick="showTab(10)">Break-Even</button>
+  <button class="tab" onclick="showTab(11)">Cash Flow</button>
+  <button class="tab" onclick="showTab(12)">Financing</button>
+  <button class="tab" onclick="showTab(13)">Sensitivity</button>
+  <button class="tab" onclick="showTab(14)">Risk</button>
+  <button class="tab" onclick="showTab(15)">Scenarios</button>
+  <button class="tab" onclick="showTab(16)">Operations <span class="tnew">NEW</span></button>
+  <button class="tab" onclick="showTab(17)">Market Intel <span class="tnew">LIVE</span></button>
+  <button class="tab" onclick="showTab(18)">Suppliers <span class="tnew">NEW</span></button>
+  <button class="tab" onclick="showTab(19)">SKU Manager <span class="tnew">NEW</span></button>
+  <button class="tab" onclick="showTab(20)">What-If <span class="tnew">v6</span></button>
+</div>
+<div id="main">
+
+<!-- P0: DASHBOARD -->
+<div class="page active" id="p0">
+  <div class="sec"><span class="acc">Executive Dashboard</span></div>
+  <div class="g5 mb" id="dash-kpis">
+    <div class="kpi kc1"><div class="kl">Monthly Net Profit</div><div class="kv" id="d-profit" style="color:var(--c1)">—</div><div class="ks" id="d-profit-s">—</div></div>
+    <div class="kpi kc2"><div class="kl">Monthly Revenue</div><div class="kv" id="d-rev" style="color:var(--c2)">—</div><div class="ks" id="d-rev-s">—</div></div>
+    <div class="kpi kc3"><div class="kl">Gross Margin</div><div class="kv" id="d-gm" style="color:var(--c3)">—</div><div class="ks" id="d-gm-s">—</div></div>
+    <div class="kpi kc5"><div class="kl">10-Year IRR</div><div class="kv" id="d-irr" style="color:var(--c5)">—</div><div class="ks">Risk-adjusted return</div></div>
+    <div class="kpi kc6"><div class="kl">Payback Period</div><div class="kv" id="d-pay" style="color:var(--c6)">—</div><div class="ks" id="d-pay-s">—</div></div>
+  </div>
+  <div class="g3 mb">
+    <div class="kpi kc1"><div class="kl">Total Bottles/Month</div><div class="kv" id="d-btl" style="color:var(--c1);font-size:15px">—</div><div class="ks" id="d-btl-s">—</div></div>
+    <div class="kpi kc2"><div class="kl">10-Year NPV</div><div class="kv" id="d-npv" style="color:var(--c2);font-size:15px">—</div><div class="ks" id="d-npv-s">—</div></div>
+    <div class="kpi kc3"><div class="kl">Total Investment</div><div class="kv" id="d-inv" style="color:var(--c3);font-size:15px">—</div><div class="ks" id="d-inv-s">—</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">Revenue vs Profit (Monthly)</span></div><div class="cw"><canvas id="ch-d-rev"></canvas></div></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title">CAPEX Distribution</span></div><div class="cw"><canvas id="ch-d-cx"></canvas></div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-am"><div class="card-head"><span class="card-title">10-Year Net Profit Projection</span></div><div class="cw cw-tall"><canvas id="ch-d-10y"></canvas></div></div>
+    <div class="card c-pu">
+      <div class="card-head"><span class="card-title">Investment Returns</span></div>
+      <div class="tw h220"><table class="tbl" id="tbl-ret"></table></div>
+      <div class="sep"></div>
+      <div class="card-head"><span class="card-title">Ministry Official Prices — Tartous Jan 2025</span></div>
+      <div class="tw"><table class="tbl" id="tbl-ministry"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- P1: MARKET -->
+<div class="page" id="p1">
+  <div class="sec"><span class="acc">Market Analysis</span></div>
+  <div class="g4 mb">
+    <div class="kpi kc1"><div class="kl">Syria Market Size</div><div class="kv" style="color:var(--c1)">2.1B L</div><div class="ks">Annual demand 2024</div></div>
+    <div class="kpi kc2"><div class="kl">Market Growth</div><div class="kv" style="color:var(--c2)">15%</div><div class="ks">CAGR 2022–2028E</div></div>
+    <div class="kpi kc3"><div class="kl">Per Capita</div><div class="kv" style="color:var(--c3)">95 L/yr</div><div class="ks">vs 180L regional avg</div></div>
+    <div class="kpi kc5"><div class="kl">Active Plants Syria</div><div class="kv" style="color:var(--c5)">&lt;40</div><div class="ks">Low competition</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">Market Growth Forecast 2022–2029E</span></div><div class="cw cw-tall"><canvas id="ch-mkt-g"></canvas></div></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Product Segment Mix</span></div><div class="cw"><canvas id="ch-mkt-s"></canvas></div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-am"><div class="card-head"><span class="card-title">Sales Ramp-Up Plan</span></div><div class="cw"><canvas id="ch-mkt-r"></canvas></div><div class="tw" style="margin-top:8px"><table class="tbl" id="tbl-ramp"></table></div></div>
+    <div class="card c-gn">
+      <div class="card-head"><span class="card-title">Sales Channels</span></div>
+      <div class="tw"><table class="tbl" id="tbl-ch"></table></div>
+      <div class="sep"></div>
+      <div style="font-family:var(--display);font-size:9.5px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:var(--t2);margin-bottom:8px">Demand Drivers</div>
+      <div id="demand-drivers"></div>
+    </div>
+  </div>
+</div>
+
+<!-- P2: COMPETITION -->
+<div class="page" id="p2">
+  <div class="sec"><span class="acc">Competition Analysis</span></div>
+  <div class="g3 mb" id="comp-cards"></div>
+  <div class="g2 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">Price Positioning by SKU</span></div><div class="cw"><canvas id="ch-comp-p"></canvas></div></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Competitive Score Matrix</span></div><div id="comp-matrix"></div></div>
+  </div>
+  <div class="card c-am"><div class="card-head"><span class="card-title">Full Competitor Comparison</span></div><div class="tw"><table class="tbl" id="tbl-comp"></table></div></div>
+</div>
+
+<!-- P3: ASSUMPTIONS -->
+<div class="page" id="p3">
+  <div class="sec"><span class="acc">Model Assumptions</span></div>
+  <div class="g2 mb">
+    <div>
+      <div class="card c-tl mb"><div class="card-head"><span class="card-title">💱 Macro Parameters</span></div><div id="sl-macro"></div></div>
+      <div class="card c-bl mb"><div class="card-head"><span class="card-title">💵 Selling Prices (SYP/bottle)</span><span id="mix-bdg" class="mix-bdg bwarn">Mix: 0%</span></div><div id="sl-prices"></div><div style="margin-top:8px" id="mix-warn"></div></div>
+      <div class="card c-am mb"><div class="card-head"><span class="card-title">⚙️ Production</span></div><div id="sl-prod"></div></div>
+    </div>
+    <div>
+      <div class="card c-pu mb"><div class="card-head"><span class="card-title">🚀 Line Speeds (bottles/hr)</span></div><div id="sl-speeds"></div></div>
+      <div class="card c-gn mb"><div class="card-head"><span class="card-title">🏦 Financing</span></div><div id="sl-fin"></div></div>
+      <div class="card c-rd"><div class="card-head"><span class="card-title">📋 Assumptions Summary</span></div><div class="tw"><table class="tbl" id="tbl-asm"></table></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- P4: CAPEX -->
+<div class="page" id="p4">
+  <div class="sec"><span class="acc">Capital Expenditure</span></div>
+  <div class="g4 mb">
+    <div class="kpi kc1"><div class="kl">Total CAPEX</div><div class="kv" id="k-cx1" style="color:var(--c1);font-size:15px">—</div><div class="ks" id="k-cx1s">—</div></div>
+    <div class="kpi kc2"><div class="kl">Working Capital</div><div class="kv" id="k-cx2" style="color:var(--c2);font-size:15px">—</div><div class="ks" id="k-cx2s">—</div></div>
+    <div class="kpi kc3"><div class="kl">Total Investment</div><div class="kv" id="k-cx3" style="color:var(--c3);font-size:15px">—</div><div class="ks" id="k-cx3s">—</div></div>
+    <div class="kpi kc5"><div class="kl">Contingency (auto 5%)</div><div class="kv" id="k-cx4" style="color:var(--c5);font-size:15px">—</div><div class="ks">Auto-calculated</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl">
+      <div class="card-head"><span class="card-title">CAPEX Line Items</span><button class="btn-add" onclick="addRow('cx')">+ Add Item</button></div>
+      <div class="dh cx"><span>Description</span><span>Category</span><span>USD</span><span>SYP (M)</span><span></span></div>
+      <div id="rows-cx"></div>
+      <div class="dr-tot" id="tot-cx">—</div>
+    </div>
+    <div>
+      <div class="card c-bl mb"><div class="card-head"><span class="card-title">By Category</span></div><div class="cw"><canvas id="ch-cx-c"></canvas></div></div>
+      <div class="card c-am"><div class="card-head"><span class="card-title">Top Items</span></div><div class="cw cw-sm"><canvas id="ch-cx-i"></canvas></div></div>
+    </div>
+  </div>
+  <div class="card c-pu"><div class="card-head"><span class="card-title">Depreciation Schedule</span></div><div class="tw"><table class="tbl" id="tbl-dep"></table></div></div>
+</div>
+
+<!-- P5: OPEX -->
+<div class="page" id="p5">
+  <div class="sec"><span class="acc">Operating Expenses</span></div>
+  <div class="g4 mb">
+    <div class="kpi kc1"><div class="kl">Total OPEX/Month</div><div class="kv" id="k-ox1" style="color:var(--c1);font-size:15px">—</div><div class="ks" id="k-ox1s">—</div></div>
+    <div class="kpi kc2"><div class="kl">Annual OPEX</div><div class="kv" id="k-ox2" style="color:var(--c2);font-size:15px">—</div><div class="ks" id="k-ox2s">—</div></div>
+    <div class="kpi kc3"><div class="kl">% of Revenue</div><div class="kv" id="k-ox3" style="color:var(--c3)">—</div><div class="ks">At full capacity</div></div>
+    <div class="kpi kc5"><div class="kl">Cost/Bottle</div><div class="kv" id="k-ox4" style="color:var(--c5)">—</div><div class="ks">OPEX allocated</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl">
+      <div class="card-head"><span class="card-title">Monthly OPEX Items</span><button class="btn-add" onclick="addRow('ox')">+ Add Item</button></div>
+      <div class="dh ox"><span>Description</span><span>Category</span><span>USD/Mo</span><span>SYP/Mo</span><span></span></div>
+      <div id="rows-ox"></div>
+      <div class="dr-tot" id="tot-ox">—</div>
+    </div>
+    <div>
+      <div class="card c-bl mb"><div class="card-head"><span class="card-title">By Category</span></div><div class="cw"><canvas id="ch-ox-c"></canvas></div></div>
+      <div class="card c-am"><div class="card-head"><span class="card-title">OPEX % of Revenue by Capacity</span></div><div class="cw cw-sm"><canvas id="ch-ox-p"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- P6: HR -->
+<div class="page" id="p6">
+  <div class="sec"><span class="acc">Human Resources</span></div>
+  <div class="g4 mb">
+    <div class="kpi kc1"><div class="kl">Total Headcount</div><div class="kv" id="k-hr1" style="color:var(--c1)">—</div><div class="ks">Full-time</div></div>
+    <div class="kpi kc2"><div class="kl">Monthly Payroll</div><div class="kv" id="k-hr2" style="color:var(--c2);font-size:15px">—</div><div class="ks" id="k-hr2s">—</div></div>
+    <div class="kpi kc3"><div class="kl">Avg Salary/Person</div><div class="kv" id="k-hr3" style="color:var(--c3);font-size:15px">—</div><div class="ks">USD/month</div></div>
+    <div class="kpi kc5"><div class="kl">Payroll % of OPEX</div><div class="kv" id="k-hr4" style="color:var(--c5)">—</div><div class="ks">Labor intensity</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl">
+      <div class="card-head"><span class="card-title">Positions</span><button class="btn-add" onclick="addRow('hr')">+ Add Position</button></div>
+      <div class="dh hr"><span>Position</span><span>Department</span><span>Cnt</span><span>Salary/mo $</span><span>Total $/mo</span><span></span></div>
+      <div id="rows-hr"></div>
+      <div class="dr-tot" id="tot-hr">—</div>
+    </div>
+    <div>
+      <div class="card c-bl mb"><div class="card-head"><span class="card-title">By Department</span></div><div class="cw"><canvas id="ch-hr-d"></canvas></div></div>
+      <div class="card c-am"><div class="card-head"><span class="card-title">Hiring Timeline</span></div><div class="tw"><table class="tbl" id="tbl-hire"></table></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- P7: PRODUCTION -->
+<div class="page" id="p7">
+  <div class="sec"><span class="acc">Production Analysis</span></div>
+  <div class="g4 mb">
+    <div class="kpi kc1"><div class="kl">Total Production/Mo</div><div class="kv" id="k-p1" style="color:var(--c1);font-size:15px">—</div><div class="ks">Net bottles</div></div>
+    <div class="kpi kc2"><div class="kl">Active Hours/Mo</div><div class="kv" id="k-p2" style="color:var(--c2)">—</div><div class="ks" id="k-p2s">—</div></div>
+    <div class="kpi kc3"><div class="kl">Avg COGS/Bottle</div><div class="kv" id="k-p3" style="color:var(--c3);font-size:15px">—</div><div class="ks">All SKUs blended</div></div>
+    <div class="kpi kc5"><div class="kl">Blended Margin</div><div class="kv" id="k-p4" style="color:var(--c5)">—</div><div class="ks">All SKUs</div></div>
+  </div>
+  <div id="sku-prod-cards" class="mb"></div>
+  <div class="g2 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">Volume by SKU</span></div><div class="cw"><canvas id="ch-pv"></canvas></div></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Revenue by SKU</span></div><div class="cw"><canvas id="ch-pr"></canvas></div></div>
+  </div>
+  <div class="g3 mb">
+    <div class="card c-am"><div class="card-head"><span class="card-title">Daily Targets</span></div><div class="tw"><table class="tbl" id="tbl-daily"></table></div></div>
+    <div class="card c-gn"><div class="card-head"><span class="card-title">Water Consumption</span></div><div class="tw"><table class="tbl" id="tbl-water"></table></div></div>
+    <div class="card c-pu"><div class="card-head"><span class="card-title">Packaging Demand/Mo</span></div><div class="tw"><table class="tbl" id="tbl-pkg"></table></div></div>
+  </div>
+</div>
+
+<!-- P8: MATERIALS -->
+<div class="page" id="p8">
+  <div class="sec"><span class="acc">Raw Materials</span></div>
+  <div class="cl cl-info mb">
+    <strong>Primary Supplier: Anhui Creative Packaging Technology Co., Ltd</strong> — Hefei, China · Oliver Zhang · <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="ee818287988b9cae8d9c8b8f9a87988bc39e8f8d85878089c08d8183">[email&#160;protected]</a> · +86-13856857527 · Quote: Sep 14, 2025 · Brand: NAQI · Payment: 30% TT advance · Lead: 15–20 days
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl">
+      <div class="card-head"><span class="card-title">Materials (Cost per Bottle)</span><button class="btn-add" onclick="addRow('rm')">+ Add Material</button></div>
+      <div class="dh rm"><span>Material</span><span>SKU</span><span>$/bottle</span><span>SYP/btl</span><span>% Price</span><span></span></div>
+      <div id="rows-rm"></div>
+      <div class="dr-tot" id="tot-rm">—</div>
+    </div>
+    <div>
+      <div class="card c-bl mb"><div class="card-head"><span class="card-title">Cost by SKU</span></div><div class="cw"><canvas id="ch-rm-c"></canvas></div></div>
+      <div class="card c-am"><div class="card-head"><span class="card-title">Packaging % of Price</span></div><div class="cw cw-sm"><canvas id="ch-rm-p"></canvas></div></div>
+    </div>
+  </div>
+  <div class="g3 mb">
+    <div class="card c-pu"><div class="card-head"><span class="card-title">Monthly Purchase Budget</span></div><div class="tw"><table class="tbl" id="tbl-rm-b"></table></div></div>
+    <div class="card c-gn"><div class="card-head"><span class="card-title">Anhui Supplier Quote (Sep 2025)</span></div><div class="tw"><table class="tbl" id="tbl-anhui"></table></div></div>
+    <div class="card c-rd"><div class="card-head"><span class="card-title">3-Month Inventory Buffer</span></div><div class="tw"><table class="tbl" id="tbl-buf"></table></div></div>
+  </div>
+</div>
+
+<!-- P9: P&L -->
+<div class="page" id="p9">
+  <div class="sec"><span class="acc">Profit &amp; Loss</span></div>
+  <div class="g2 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">P&L Waterfall</span></div><div class="cw cw-tall"><canvas id="ch-pl-w"></canvas></div></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Monthly Income Statement</span></div><div class="tw h400"><table class="tbl" id="tbl-pl"></table></div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-am"><div class="card-head"><span class="card-title">10-Year P&L with Ramp-Up</span></div><div class="cw cw-tall"><canvas id="ch-pl-10y"></canvas></div></div>
+    <div class="card c-pu"><div class="card-head"><span class="card-title">Capacity Scenario Matrix</span></div><div class="tw"><table class="tbl" id="tbl-pl-sc"></table></div></div>
+  </div>
+</div>
+
+<!-- P10: BREAK-EVEN -->
+<div class="page" id="p10">
+  <div class="sec"><span class="acc">Break-Even Analysis</span></div>
+  <div class="g4 mb">
+    <div class="kpi kc1"><div class="kl">BE Bottles/Month</div><div class="kv" id="k-be1" style="color:var(--c1);font-size:15px">—</div><div class="ks" id="k-be1s">—</div></div>
+    <div class="kpi kc2"><div class="kl">BE Revenue</div><div class="kv" id="k-be2" style="color:var(--c2);font-size:15px">—</div><div class="ks" id="k-be2s">—</div></div>
+    <div class="kpi kc3"><div class="kl">Contribution Margin</div><div class="kv" id="k-be3" style="color:var(--c3);font-size:15px">—</div><div class="ks">SYP per bottle (blended)</div></div>
+    <div class="kpi kc5"><div class="kl">Safety Margin</div><div class="kv" id="k-be4" style="color:var(--c5)">—</div><div class="ks">vs break-even volume</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">Break-Even Chart (0–120% Capacity)</span></div><div class="cw cw-tall"><canvas id="ch-be"></canvas></div></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Break-Even by SKU</span></div><div class="tw"><table class="tbl" id="tbl-be"></table></div></div>
+  </div>
+</div>
+
+<!-- P11: CASH FLOW -->
+<div class="page" id="p11">
+  <div class="sec"><span class="acc">Cash Flow</span></div>
+  <div class="g4 mb">
+    <div class="kpi kc1"><div class="kl">Total Investment</div><div class="kv" id="k-cf1" style="color:var(--c1);font-size:15px">—</div><div class="ks" id="k-cf1s">—</div></div>
+    <div class="kpi kc2"><div class="kl">Payback Period</div><div class="kv" id="k-cf2" style="color:var(--c2)">—</div><div class="ks">From operations start</div></div>
+    <div class="kpi kc5"><div class="kl">10-Year IRR</div><div class="kv" id="k-cf3" style="color:var(--c5)">—</div><div class="ks">—</div></div>
+    <div class="kpi kc6"><div class="kl">10-Year NPV</div><div class="kv" id="k-cf4" style="color:var(--c6);font-size:15px">—</div><div class="ks" id="k-cf4s">—</div></div>
+  </div>
+  <div class="card c-tl mb"><div class="card-head"><span class="card-title">10-Year Cumulative Cash Flow</span></div><div class="cw cw-tall"><canvas id="ch-cf"></canvas></div></div>
+  <div class="card c-bl mb"><div class="card-head"><span class="card-title">10-Year Cash Flow Table</span></div><div class="tw h280"><table class="tbl" id="tbl-cf"></table></div></div>
+  <div class="g2 mb">
+    <div class="card c-am"><div class="card-head"><span class="card-title">Discounted vs Undiscounted CF</span></div><div class="cw"><canvas id="ch-cf-d"></canvas></div></div>
+    <div class="card c-pu"><div class="card-head"><span class="card-title">NPV Sensitivity to Discount Rate</span></div><div class="cw"><canvas id="ch-cf-n"></canvas></div></div>
+  </div>
+</div>
+
+<!-- P12: FINANCING -->
+<div class="page" id="p12">
+  <div class="sec"><span class="acc">Financing Structure</span></div>
+  <div class="g3 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">Summary</span></div><div class="tw"><table class="tbl" id="tbl-fin"></table></div></div>
+    <div id="dscr-box"></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Equity vs Loan</span></div><div class="cw"><canvas id="ch-fin-s"></canvas></div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-am"><div class="card-head"><span class="card-title">Amortization Schedule</span></div><div class="tw h340"><table class="tbl" id="tbl-amort"></table></div></div>
+    <div>
+      <div class="card c-pu mb"><div class="card-head"><span class="card-title">CF After Debt Service</span></div><div class="cw"><canvas id="ch-fin-c"></canvas></div></div>
+      <div class="card c-gn"><div class="card-head"><span class="card-title">DSCR by Year</span></div><div class="cw cw-sm"><canvas id="ch-fin-d"></canvas></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- P13: SENSITIVITY -->
+<div class="page" id="p13">
+  <div class="sec"><span class="acc">Sensitivity Analysis</span></div>
+  <div class="g2 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">Tornado Chart (±20% Impact)</span></div><div class="cw cw-tall"><canvas id="ch-sens-t"></canvas></div></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Sensitivity Summary</span></div><div class="tw"><table class="tbl" id="tbl-sens"></table></div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-am"><div class="card-head"><span class="card-title">Selling Price ±20%</span></div><div class="cw"><canvas id="ch-sens-p"></canvas></div></div>
+    <div class="card c-pu"><div class="card-head"><span class="card-title">Volume Sensitivity</span></div><div class="cw"><canvas id="ch-sens-v"></canvas></div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-gn"><div class="card-head"><span class="card-title">Exchange Rate Sensitivity</span></div><div class="cw"><canvas id="ch-sens-e"></canvas></div></div>
+    <div class="card c-rd"><div class="card-head"><span class="card-title">OPEX Sensitivity</span></div><div class="cw"><canvas id="ch-sens-o"></canvas></div></div>
+  </div>
+</div>
+
+<!-- P14: RISK -->
+<div class="page" id="p14">
+  <div class="sec"><span class="acc">Risk &amp; SWOT</span></div>
+  <div class="swot-grid mb">
+    <div class="swot-s"><div class="swot-title" style="color:var(--green)">💪 Strengths</div><div id="sw-s"></div></div>
+    <div class="swot-w"><div class="swot-title" style="color:var(--red)">⚠️ Weaknesses</div><div id="sw-w"></div></div>
+    <div class="swot-o"><div class="swot-title" style="color:var(--blue)">🌟 Opportunities</div><div id="sw-o"></div></div>
+    <div class="swot-t"><div class="swot-title" style="color:var(--amber)">🔥 Threats</div><div id="sw-t"></div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl"><div class="card-head"><span class="card-title">Risk Register</span></div><div class="tw"><table class="tbl" id="tbl-risk"></table></div></div>
+    <div class="card c-bl">
+      <div class="card-head"><span class="card-title">Monte Carlo (2,000 Scenarios)</span></div>
+      <div class="cw"><canvas id="ch-mc"></canvas></div>
+      <div class="tw" style="margin-top:8px"><table class="tbl" id="tbl-mc"></table></div>
+    </div>
+  </div>
+</div>
+
+<!-- P15: SCENARIOS -->
+<div class="page" id="p15">
+  <div class="sec"><span class="acc">Scenario Builder</span></div>
+  <div class="g3 mb">
+    <div class="card c-gn"><div class="card-head"><span class="card-title" style="color:var(--green)">🚀 Optimistic</span></div><div id="sc-opt"></div></div>
+    <div class="card c-bl"><div class="card-head"><span class="card-title" style="color:var(--blue)">📊 Base Case</span></div><div id="sc-base"></div></div>
+    <div class="card c-rd"><div class="card-head"><span class="card-title" style="color:var(--red)">⚠️ Pessimistic</span></div><div id="sc-pess"></div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-am"><div class="card-head"><span class="card-title">Net Profit by Year (All Scenarios)</span></div><div class="cw cw-tall"><canvas id="ch-sc-p"></canvas></div></div>
+    <div class="card c-pu"><div class="card-head"><span class="card-title">10-Year NPV by Scenario</span></div><div class="cw"><canvas id="ch-sc-n"></canvas></div></div>
+  </div>
+  <div class="card c-gn"><div class="card-head"><span class="card-title">Scenario Comparison</span></div><div class="tw"><table class="tbl" id="tbl-sc"></table></div></div>
+</div>
+
+<!-- P16: OPERATIONS -->
+<div class="page" id="p16">
+  <div class="sec"><span class="acc">Operations Cycle</span><span class="tnew" style="margin-left:8px">NEW</span></div>
+  <div class="g4 mb">
+    <div class="kpi kc1"><div class="kl">Daily Capacity</div><div class="kv" id="k-op1" style="color:var(--c1);font-size:15px">—</div><div class="ks">Bottles/day</div></div>
+    <div class="kpi kc2"><div class="kl">Active Shifts</div><div class="kv" id="k-op2" style="color:var(--c2)">—</div><div class="ks" id="k-op2s">—</div></div>
+    <div class="kpi kc3"><div class="kl">Open Orders</div><div class="kv" id="k-op3" style="color:var(--c3)">—</div><div class="ks">Pending + Processing</div></div>
+    <div class="kpi kc5"><div class="kl">Avg Inventory Cover</div><div class="kv" id="k-op4" style="color:var(--c5)">—</div><div class="ks">Days of stock</div></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-tl">
+      <div class="card-head"><span class="card-title">⏰ Shift Planning</span><button class="btn-add" onclick="addShift()">+ Add Shift</button></div>
+      <div id="shifts-cont"></div>
+    </div>
+    <div class="card c-bl">
+      <div class="card-head"><span class="card-title">📦 Raw Material Inventory</span><button class="btn-add" onclick="addInvItem()">+ Add Item</button></div>
+      <div id="inv-cont"></div>
+    </div>
+  </div>
+  <div class="card c-am mb">
+    <div class="card-head"><span class="card-title">📋 Order Pipeline</span><button class="btn-add" onclick="addOrder()">+ New Order</button></div>
+    <div class="dh ord"><span>Order #</span><span>Customer</span><span>SKU</span><span>Qty (K)</span><span>Due Date</span><span>Status</span><span></span></div>
+    <div id="orders-cont"></div>
+    <div class="dr-tot" id="tot-orders">—</div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-gn"><div class="card-head"><span class="card-title">Monthly Production Plan</span></div><div class="cw"><canvas id="ch-op-p"></canvas></div></div>
+    <div class="card c-pu"><div class="card-head"><span class="card-title">Maintenance Schedule</span></div><div class="tw"><table class="tbl" id="tbl-maint"></table></div></div>
+  </div>
+</div>
+
+<!-- P17: MARKET INTEL -->
+<div class="page" id="p17">
+  <div class="sec"><span class="acc">Market Intelligence</span><span class="tnew" style="margin-left:8px">LIVE EDIT</span></div>
+  <div class="cl cl-ok mb">
+    <strong>Editable Market Data</strong> — Click any price cell to edit inline. All changes update the model in real-time. Sources: Ministry of Industry (Tartous Decision No.11, Jan 30 2025) + Competitor Tracking.
+  </div>
+  <div class="card c-tl mb">
+    <div class="card-head"><span class="card-title">Syrian Official & Market Prices (All Sizes)</span><button class="btn-add" onclick="addMktRow()">+ Add Product</button></div>
+    <div class="dh mkt"><span>Size</span><span>Pack</span><span>Factory SYP</span><span>Wholesale SYP</span><span>Consumer SYP</span><span>Our Price SYP</span><span>Diff%</span><span>Notes</span><span></span></div>
+    <div id="rows-mkt"></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Price Comparison by Size</span></div><div class="cw cw-tall"><canvas id="ch-mkt-p"></canvas></div></div>
+    <div class="card c-am">
+      <div class="card-head"><span class="card-title">Market Conditions Tracker</span><button class="btn-add" onclick="addCond()">+ Add</button></div>
+      <div class="dh cond"><span>Factor</span><span>Value</span><span>Trend</span><span>Impact</span><span>Notes</span><span></span></div>
+      <div id="rows-cond"></div>
+    </div>
+  </div>
+  <div class="card c-pu mb">
+    <div class="card-head"><span class="card-title">Competitor Price Tracking</span><button class="btn-add" onclick="addCompP()">+ Add Entry</button></div>
+    <div class="dh comp-p"><span>Date</span><span>Brand</span><span>SKU</span><span>Price SYP</span><span>Channel</span><span>Notes</span><span></span></div>
+    <div id="rows-comp-p"></div>
+  </div>
+</div>
+
+<!-- P18: SUPPLIERS -->
+<div class="page" id="p18">
+  <div class="sec"><span class="acc">Supplier Hub</span><span class="tnew" style="margin-left:8px">NEW</span></div>
+  <div class="card c-tl mb">
+    <div class="card-head"><span class="card-title">Supplier Directory</span><button class="btn-add" onclick="addSupplier()">+ Add Supplier</button></div>
+    <div id="sup-cont"></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Price Comparison Matrix</span></div><div class="tw h280"><table class="tbl" id="tbl-sup-comp"></table></div></div>
+    <div class="card c-am"><div class="card-head"><span class="card-title">Supplier Cost Impact</span></div><div class="cw"><canvas id="ch-sup"></canvas></div></div>
+  </div>
+  <div class="card c-pu">
+    <div class="card-head"><span class="card-title">RFQ / Order History</span><button class="btn-add" onclick="addRFQ()">+ Add RFQ</button></div>
+    <div class="dh rfq"><span>Date</span><span>Supplier</span><span>Item</span><span>Qty</span><span>Unit $</span><span>Total $</span><span>Status</span><span></span></div>
+    <div id="rows-rfq"></div>
+  </div>
+</div>
+
+<!-- P19: SKU MANAGER -->
+<div class="page" id="p19">
+  <div class="sec"><span class="acc">SKU Manager</span><span class="tnew" style="margin-left:8px">FULLY DYNAMIC</span></div>
+  <div class="cl cl-info mb">
+    <strong>Dynamic Product Lines</strong> — Add/remove any bottle size. All production, revenue, COGS, and charts update across the entire platform instantly. Data embedded from Anhui Creative quote (Sep 2025) and Ministry prices (Jan 2025).
+  </div>
+  <div class="card c-tl mb">
+    <div class="card-head">
+      <span class="card-title">Active SKUs <span id="sku-mix-info" class="mix-bdg bwarn">Mix: 0%</span></span>
+      <button class="btn-add" onclick="addSKU()">+ Add SKU</button>
+    </div>
+    <div class="dh sk"><span>Name</span><span>Vol(L)</span><span>Speed b/hr</span><span>Mix%</span><span>Price SYP</span><span>Preform $</span><span>Label $</span><span></span></div>
+    <div id="rows-sk"></div>
+  </div>
+  <div class="g2 mb">
+    <div class="card c-bl"><div class="card-head"><span class="card-title">Volume Distribution</span></div><div class="cw"><canvas id="ch-sku-v"></canvas></div></div>
+    <div class="card c-am"><div class="card-head"><span class="card-title">Revenue &amp; Margin by SKU</span></div><div class="cw"><canvas id="ch-sku-m"></canvas></div></div>
+  </div>
+  <div class="card c-pu"><div class="card-head"><span class="card-title">SKU Economics Summary</span></div><div class="tw"><table class="tbl" id="tbl-sku"></table></div></div>
+</div>
+
+
+<!-- P20: WHAT-IF REVERSE CALCULATOR (v6 NEW) -->
+<div class="page" id="p20">
+  <div class="sec"><span class="acc">What-If Reverse Calculator</span><span class="tnew" style="margin-left:8px">v6 NEW</span></div>
+  <div class="cl cl-info mb">
+    <strong>Reverse Engineering Tool</strong> — Enter a target outcome (profit, revenue, or payback) and the calculator will back-compute what price, volume, or cost structure is required to achieve it.
+  </div>
+  <div class="g2 mb">
+    <div>
+      <div class="card c-tl mb">
+        <div class="card-head"><span class="card-title">Target Goal</span></div>
+        <div style="margin-bottom:12px">
+          <label class="label">I want to achieve...</label>
+          <select class="sel" id="wi-goal" onchange="wiCalc()" style="margin-bottom:8px">
+            <option value="netProfit">Monthly Net Profit (SYP)</option>
+            <option value="rev">Monthly Revenue (SYP)</option>
+            <option value="payback">Payback Period (years)</option>
+            <option value="irr">10-Year IRR (%)</option>
+            <option value="dscr">DSCR Ratio (x)</option>
+          </select>
+          <label class="label">Target Value</label>
+          <input class="inp" id="wi-target" type="number" value="1000000000" oninput="wiCalc()" placeholder="Target value...">
+          <div style="font-size:9px;color:var(--t3);margin-top:4px" id="wi-target-hint">e.g. 1,000,000,000 = 1B SYP monthly net profit</div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label class="label">By adjusting...</label>
+          <select class="sel" id="wi-lever" onchange="wiCalc()">
+            <option value="price">Selling Price (all SKUs %)</option>
+            <option value="util">Production Volume / Capacity %</option>
+            <option value="opex">OPEX Reduction %</option>
+            <option value="exrate">Exchange Rate (SYP/$)</option>
+            <option value="mix">SKU Mix (shift to highest margin)</option>
+          </select>
+        </div>
+        <button class="btn btl" onclick="wiCalc()">Calculate</button>
+      </div>
+      <div class="card c-cy mb">
+        <div class="card-head"><span class="card-title">Currency Converter</span></div>
+        <div class="conv-panel">
+          <div class="conv-inp-row">
+            <span class="conv-flag">&#x1F4B5;</span>
+            <div style="flex:1">
+              <input class="inp" id="conv-amount" type="number" value="1000000" oninput="doConvert()" placeholder="Amount...">
+            </div>
+            <select class="sel" id="conv-from" style="width:90px" onchange="doConvert()">
+              <option value="SYP">SYP</option>
+              <option value="USD">USD</option>
+              <option value="SAR">SAR</option>
+              <option value="EUR">EUR</option>
+              <option value="GBP">GBP</option>
+            </select>
+          </div>
+          <div class="conv-result" id="conv-result">
+            <div class="conv-res-row"><span style="font-size:14px">&#x1F1F8;&#x1F1FE;</span><span class="conv-res-lbl">Syrian Pound</span><span class="conv-res-val" id="cr-syp">--</span></div>
+            <div class="conv-res-row"><span style="font-size:14px">&#x1F1FA;&#x1F1F8;</span><span class="conv-res-lbl">US Dollar</span><span class="conv-res-val" id="cr-usd">--</span></div>
+            <div class="conv-res-row"><span style="font-size:14px">&#x1F1F8;&#x1F1E6;</span><span class="conv-res-lbl">Saudi Riyal</span><span class="conv-res-val" id="cr-sar">--</span></div>
+            <div class="conv-res-row"><span style="font-size:14px">&#x1F1EA;&#x1F1FA;</span><span class="conv-res-lbl">Euro</span><span class="conv-res-val" id="cr-eur">--</span></div>
+          </div>
+          <div style="font-size:8.5px;color:var(--t3);margin-top:8px" id="conv-rate-note">Using model exchange rate: 1 USD = 12,000 SYP | SAR rate: 1 USD = 3.75 SAR</div>
+        </div>
+      </div>
+    </div>
+    <div>
+      <div class="card c-gn mb">
+        <div class="card-head"><span class="card-title">Result</span></div>
+        <div class="whatif-box">
+          <div id="wi-label" style="font-size:10px;color:var(--t3);margin-bottom:4px">Required adjustment</div>
+          <div class="whatif-result" id="wi-result">--</div>
+          <div class="whatif-sub" id="wi-sub">Click Calculate above</div>
+          <div style="margin-top:12px;padding-top:10px;border-top:1px solid var(--b2)" id="wi-impact"></div>
+        </div>
+      </div>
+      <div class="card c-am mb">
+        <div class="card-head"><span class="card-title">Sensitivity Grid</span></div>
+        <div class="tw"><table class="tbl" id="tbl-wi-grid"></table></div>
+      </div>
+      <div class="card c-bl">
+        <div class="card-head"><span class="card-title">Current vs Target</span></div>
+        <div class="cw"><canvas id="ch-wi"></canvas></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+</div><!-- end #main -->
+<script>
+// ============================================================
+// NAQI COMMAND PLATFORM v6 — CORE ENGINE
+// BUGS FIXED: scenario load order, MC reset, DSCR template,
+//             RFQ render, market intel chart, waterfall float
+// NEW: What-If, Currency Converter, Multi-currency KPIs,
+//      Sorted Tornado, PDF print
+// ============================================================
+const $=id=>document.getElementById(id);
+const sH=(id,h)=>{const e=$(id);if(e)e.innerHTML=h};
+const N=(n,d=0)=>isNaN(n)||!isFinite(n)?"--":Number(n.toFixed(d)).toLocaleString("en");
+const M=(n,d=1)=>N(n/1e6,d)+"M";
+const K=(n,d=0)=>N(n/1e3,d)+"K";
+const P=(n)=>isNaN(n)||!isFinite(n)?"--":n.toFixed(1)+"%";
+const U=(n)=>"$"+N(n,0);
+const SYP=(n)=>M(n,1)+" SYP";
+const eQ=s=>String(s||"").replace(/'/g,"\'").replace(/"/g,"&quot;");
+const safe=(fn)=>{try{return fn()}catch(e){console.error(e);toast("err","Error",e.message||String(e))}};
+let _raf=null;
+const recalc=()=>{if(_raf)cancelAnimationFrame(_raf);_raf=requestAnimationFrame(()=>safe(()=>_recalc()))};
+
+// ── STATE ────────────────────────────────────────
+let S={
+  skus:[
+    {id:1,name:"330ml",liters:.33,speed:8000,mix:10,price:1200,preform:.0169,label:.0049,cap:.0053,active:true},
+    {id:2,name:"500ml",liters:.5,speed:7000,mix:50,price:2215,preform:.0215,label:.0068,cap:.0053,active:true},
+    {id:3,name:"1500ml",liters:1.5,speed:3500,mix:40,price:2992,preform:.0345,label:.011,cap:.0053,active:true}
+  ],
+  sl:{exrate:12000,tax:5,discount:12,inflation:30,priceEsc:5,wcMonths:2,hrs:8,days:26,loss:2,util:100,finEq:40,finInt:12,finYrs:5,finGrace:6},
+  cx:[
+    {id:1,l:"Land & Site (2,000m2)",c:"Land",a:75000},{id:2,l:"Civil & Construction",c:"Civil",a:120000},
+    {id:3,l:"Foundation & Earthworks",c:"Civil",a:15000},{id:4,l:"Blow Moulding Machine x2",c:"Equipment",a:80000},
+    {id:5,l:"Filling & Capping Machine",c:"Equipment",a:50000},{id:6,l:"Labelling Machine",c:"Equipment",a:25000},
+    {id:7,l:"Shrink Wrap Tunnel",c:"Equipment",a:18000},{id:8,l:"Palletizer",c:"Equipment",a:12000},
+    {id:9,l:"Conveyor System",c:"Equipment",a:15000},{id:10,l:"Water Treatment RO",c:"Equipment",a:35000},
+    {id:11,l:"Water Well & Pump",c:"Utilities",a:20000},{id:12,l:"Electrical Installation",c:"Utilities",a:18000},
+    {id:13,l:"Generator 500KVA",c:"Utilities",a:22000},{id:14,l:"Compressed Air System",c:"Equipment",a:8000},
+    {id:15,l:"Cold Storage Room",c:"Equipment",a:12000},{id:16,l:"Lab & QC Equipment",c:"Equipment",a:10000},
+    {id:17,l:"Delivery Trucks x2",c:"Vehicles",a:40000},{id:18,l:"Forklift",c:"Vehicles",a:8000},
+    {id:19,l:"Office Equipment",c:"Soft Costs",a:5000},{id:20,l:"Pre-operating Expenses",c:"Soft Costs",a:8000},
+    {id:21,l:"ISO & Licensing",c:"Soft Costs",a:6000},{id:22,l:"Contingency (5%)",c:"Contingency",a:0}
+  ],
+  ox:[
+    {id:1,l:"Factory Manager",c:"Management",a:1200},{id:2,l:"Operations Supervisor",c:"Management",a:800},
+    {id:3,l:"Production Operators x6",c:"Operations",a:1800},{id:4,l:"QC Technicians x2",c:"Quality",a:500},
+    {id:5,l:"Maintenance x2",c:"Maintenance",a:600},{id:6,l:"Warehouse Staff x3",c:"Operations",a:600},
+    {id:7,l:"Delivery Drivers x2",c:"Logistics",a:400},{id:8,l:"Sales Reps x2",c:"Sales",a:600},
+    {id:9,l:"Accountant/Admin",c:"Admin",a:400},{id:10,l:"Security Guards x2",c:"Operations",a:300},
+    {id:11,l:"Electricity (production)",c:"Energy",a:800},{id:12,l:"Generator Fuel",c:"Energy",a:500},
+    {id:13,l:"Water Source Cost",c:"Energy",a:200},{id:14,l:"Compressed Air",c:"Energy",a:100},
+    {id:15,l:"Equipment Maintenance",c:"Maintenance",a:400},{id:16,l:"Spare Parts Reserve",c:"Maintenance",a:200},
+    {id:17,l:"Vehicle Fuel & Maint.",c:"Logistics",a:300},{id:18,l:"Packaging Logistics",c:"Logistics",a:200},
+    {id:19,l:"Marketing & Promotions",c:"Marketing",a:300},{id:20,l:"Insurance",c:"Admin",a:200},
+    {id:21,l:"Bank Fees",c:"Admin",a:100},{id:22,l:"Office Supplies",c:"Admin",a:50},
+    {id:23,l:"Telephone & Internet",c:"Admin",a:50},{id:24,l:"Miscellaneous",c:"Admin",a:100}
+  ],
+  hr:[
+    {id:1,pos:"Factory General Manager",dept:"Management",cnt:1,sal:1200},
+    {id:2,pos:"Operations Supervisor",dept:"Management",cnt:1,sal:800},
+    {id:3,pos:"Production Line Operator",dept:"Operations",cnt:6,sal:300},
+    {id:4,pos:"QC Lab Technician",dept:"Quality",cnt:2,sal:250},
+    {id:5,pos:"Mechanical Technician",dept:"Maintenance",cnt:2,sal:300},
+    {id:6,pos:"Warehouse Operator",dept:"Operations",cnt:3,sal:200},
+    {id:7,pos:"Delivery Driver",dept:"Logistics",cnt:2,sal:200},
+    {id:8,pos:"Sales Representative",dept:"Sales",cnt:2,sal:300},
+    {id:9,pos:"Accountant",dept:"Admin",cnt:1,sal:400},
+    {id:10,pos:"Admin Assistant",dept:"Admin",cnt:1,sal:200},
+    {id:11,pos:"Security Guard",dept:"Operations",cnt:2,sal:150}
+  ],
+  rm:[
+    {id:1,mat:"Preform 330ml PCO1881 14g",sku:"330ml",usd:.0169},{id:2,mat:"Preform 500ml PCO1881 18g",sku:"500ml",usd:.0215},
+    {id:3,mat:"Preform 1500ml PCO1881 30g",sku:"1500ml",usd:.0345},{id:4,mat:"Water Cap 28mm (all)",sku:"all",usd:.0053},
+    {id:5,mat:"BOPP Label 330ml",sku:"330ml",usd:.0049},{id:6,mat:"BOPP Label 500ml",sku:"500ml",usd:.0068},
+    {id:7,mat:"BOPP Label 1500ml",sku:"1500ml",usd:.011},{id:8,mat:"Shrink Film (est/btl)",sku:"all",usd:.003},
+    {id:9,mat:"Carton (per 12 btl)",sku:"all",usd:.005},{id:10,mat:"Treated Water (per btl)",sku:"all",usd:.0008},
+    {id:11,mat:"Ink & Date Code",sku:"all",usd:.0002}
+  ],
+  mkt:[
+    {id:1,size:"0.5L",pack:"12 btl/case",factory:22000,wholesale:24150,consumer:2215,ours:2215,notes:"Ministry official"},
+    {id:2,size:"1.5L",pack:"6 btl/case",factory:18175,wholesale:19840,consumer:2992,ours:2992,notes:"Ministry official"},
+    {id:3,size:"5L",pack:"Single",factory:8950,wholesale:9390,consumer:8950,ours:0,notes:"Not in range"},
+    {id:4,size:"10L",pack:"Single",factory:9990,wholesale:11050,consumer:12695,ours:0,notes:"Gallon segment"},
+    {id:5,size:"18.9L",pack:"Returnable",factory:14575,wholesale:15304,consumer:16835,ours:0,notes:"Water cooler"},
+    {id:6,size:"Cup",pack:"Various",factory:865,wholesale:910,consumer:1000,ours:0,notes:"Cup segment"}
+  ],
+  conds:[
+    {id:1,factor:"USD/SYP Exchange Rate",val:"12,000",trend:"up",impact:"High",notes:"Monitor weekly"},
+    {id:2,factor:"Electricity Cost ($/kWh)",val:"0.04",trend:"stable",impact:"Medium",notes:"Generator risk"},
+    {id:3,factor:"Fuel Price ($/L)",val:"0.22",trend:"stable",impact:"Medium",notes:"Logistics driver"},
+    {id:4,factor:"Import Duty (packaging)",val:"15%",trend:"stable",impact:"High",notes:"Affects Anhui cost"},
+    {id:5,factor:"Competition (0.5L avg)",val:"2,215 SYP",trend:"up",impact:"High",notes:"Gov + private"},
+    {id:6,factor:"Market Demand Growth",val:"15%/yr",trend:"up",impact:"High",notes:"Strong tailwind"}
+  ],
+  compP:[
+    {id:1,date:"2025-01-30",brand:"Gov. Tartous Plant",sku:"0.5L",price:2215,channel:"All",notes:"Official"},
+    {id:2,date:"2025-01-30",brand:"Gov. Tartous Plant",sku:"1.5L",price:2992,channel:"All",notes:"Official"},
+    {id:3,date:"2025-12-01",brand:"Private Brand A",sku:"0.5L",price:2300,channel:"Retail",notes:"Estimated"},
+    {id:4,date:"2025-12-01",brand:"Private Brand B",sku:"1.5L",price:3100,channel:"Retail",notes:"Estimated"}
+  ],
+  shifts:[
+    {id:1,name:"Morning",start:"06:00",end:"14:00",workers:8,active:true},
+    {id:2,name:"Afternoon",start:"14:00",end:"22:00",workers:6,active:true},
+    {id:3,name:"Night",start:"22:00",end:"06:00",workers:4,active:false}
+  ],
+  inventory:[
+    {id:1,mat:"Preforms 500ml",stock:500000,unit:"pcs",reorder:200000,lead:20,supplier:"Anhui"},
+    {id:2,mat:"Preforms 1500ml",stock:200000,unit:"pcs",reorder:100000,lead:20,supplier:"Anhui"},
+    {id:3,mat:"Caps 28mm",stock:800000,unit:"pcs",reorder:300000,lead:20,supplier:"Anhui"},
+    {id:4,mat:"Labels 500ml",stock:500000,unit:"pcs",reorder:200000,lead:20,supplier:"Anhui"},
+    {id:5,mat:"Shrink Film",stock:200,unit:"kg",reorder:100,lead:7,supplier:"Local"},
+    {id:6,mat:"Cartons",stock:15000,unit:"pcs",reorder:5000,lead:3,supplier:"Local"}
+  ],
+  orders:[
+    {id:1,customer:"Damascus Supermarket",sku:"500ml",qty:50,due:"2026-03-10",status:"Processing"},
+    {id:2,customer:"Aleppo Distributor",sku:"1500ml",qty:30,due:"2026-03-15",status:"Pending"},
+    {id:3,customer:"Tartous Hotels Group",sku:"330ml",qty:20,due:"2026-03-20",status:"Pending"},
+    {id:4,customer:"Gov. Ministry Contract",sku:"500ml",qty:200,due:"2026-04-01",status:"Pending"}
+  ],
+  suppliers:[
+    {id:1,name:"Anhui Creative Packaging",country:"China",contact:"Oliver Zhang",phone:"+86-13856857527",email:"oliver@creative-packing.com",rating:5,type:"Primary",items:[
+      {mat:"Preform 330ml",usd:.0169,moq:240000,lead:20},{mat:"Preform 500ml",usd:.0215,moq:240000,lead:20},
+      {mat:"Preform 1500ml",usd:.0345,moq:240000,lead:20},{mat:"Cap 28mm",usd:.0053,moq:720000,lead:20},
+      {mat:"Label 330ml",usd:.0049,moq:480000,lead:20},{mat:"Label 500ml",usd:.0068,moq:480000,lead:20},
+      {mat:"Label 1500ml",usd:.011,moq:480000,lead:20}
+    ]},
+    {id:2,name:"Syrian Local Packaging",country:"Syria",contact:"Ahmad Karimi",phone:"+963-11-1234567",email:"info@syrpack.sy",rating:3,type:"Backup",items:[
+      {mat:"Cartons",usd:.008,moq:10000,lead:3},{mat:"Shrink Film (kg)",usd:2.5,moq:100,lead:5}
+    ]}
+  ],
+  rfq:[
+    {id:1,date:"2025-09-14",sup:"Anhui Creative",item:"Full Packaging Set (1x40HQ)",qty:"1031 ctns",unitP:null,total:32948,status:"Quoted"},
+    {id:2,date:"2026-01-15",sup:"Anhui Creative",item:"Reorder Preforms 500ml",qty:"240,000",unitP:.0215,total:5160,status:"Planned"}
+  ],
+  alertCfgs:[
+    {id:1,metric:"netProfit",dir:">",threshold:500000000,unit:"SYP",label:"Monthly Net Profit > 500M SYP",active:true},
+    {id:2,metric:"irr10",dir:">",threshold:100,unit:"%",label:"10yr IRR > 100%",active:true},
+    {id:3,metric:"dscr",dir:">",threshold:1.25,unit:"x",label:"DSCR > 1.25x",active:true}
+  ],
+  snaps:[],
+  _ids:{cx:30,ox:30,hr:20,rm:20,sk:5,mkt:10,cond:10,compP:10,shift:5,inv:10,ord:10,sup:5,rfq:5,ac:5}
+};
+let scenInputs={opt:{cap:120,price:1.15,opex:.9,exr:1.1},base:{cap:100,price:1,opex:1,exr:1},pess:{cap:70,price:.85,opex:1.15,exr:.85}};
+const LS_KEY="naqi_v6";
+const LS_SNAPS="naqi_v6_snaps";
+
+// Charts registry
+const CM={};
+const PAL=["#00f5c3","#2196f3","#ff9f1c","#ff3860","#a855f7","#4ade80","#06b6d4","#f97316","#ec4899","#84cc16"];
+const PALT=PAL.map(c=>c+"99");
+const COPT=(type)=>({
+  responsive:true,maintainAspectRatio:false,
+  plugins:{legend:{labels:{color:"#aacae8",font:{size:9},boxWidth:9}},tooltip:{backgroundColor:"rgba(5,13,26,.95)",titleColor:"#eef6ff",bodyColor:"#aacae8",borderColor:"#1c2e4e",borderWidth:1,padding:8}},
+  scales:type==="doughnut"||type==="pie"?{}:{x:{ticks:{color:"#5a8ab5",font:{size:8.5}},grid:{color:"rgba(28,46,78,.5)"}},y:{ticks:{color:"#5a8ab5",font:{size:8.5}},grid:{color:"rgba(28,46,78,.5)"}}}
+});
+const mkC=(id,type,data,opts={})=>safe(()=>{
+  const cv=$(id);if(!cv)return;
+  try{if(CM[id])CM[id].destroy()}catch(_){}
+  CM[id]=new Chart(cv.getContext("2d"),{type,data,options:{...COPT(type),...opts}});
+});
+
+// Auto-save
+let _saveT=null;
+const scheduleSave=()=>{
+  const d=$("sdot"),t=$("stxt");
+  if(d)d.className="save-dot saving";if(t)t.textContent="Saving...";
+  clearTimeout(_saveT);
+  _saveT=setTimeout(()=>safe(()=>{
+    localStorage.setItem(LS_KEY,JSON.stringify(getState()));
+    if(d)d.className="save-dot";if(t)t.textContent="Saved "+new Date().toLocaleTimeString("en",{hour:"2-digit",minute:"2-digit"});
+  }),700);
+};
+const getState=()=>({sl:S.sl,skus:S.skus,cx:S.cx,ox:S.ox,hr:S.hr,rm:S.rm,mkt:S.mkt,conds:S.conds,compP:S.compP,shifts:S.shifts,inventory:S.inventory,orders:S.orders,suppliers:S.suppliers,rfq:S.rfq,alertCfgs:S.alertCfgs,scenInputs,_ids:S._ids});
+const applyState=d=>safe(()=>{
+  if(d.sl)Object.assign(S.sl,d.sl);
+  if(d.skus)S.skus=d.skus;if(d.cx)S.cx=d.cx;if(d.ox)S.ox=d.ox;if(d.hr)S.hr=d.hr;if(d.rm)S.rm=d.rm;
+  if(d.mkt)S.mkt=d.mkt;if(d.conds)S.conds=d.conds;if(d.compP)S.compP=d.compP;
+  if(d.shifts)S.shifts=d.shifts;if(d.inventory)S.inventory=d.inventory;if(d.orders)S.orders=d.orders;
+  if(d.suppliers)S.suppliers=d.suppliers;if(d.rfq)S.rfq=d.rfq;if(d.alertCfgs)S.alertCfgs=d.alertCfgs;
+  if(d.scenInputs)Object.assign(scenInputs,d.scenInputs);if(d._ids)Object.assign(S._ids,d._ids);
+  renderAll();recalc();
+});
+const loadLS=()=>safe(()=>{const r=localStorage.getItem(LS_KEY);if(r){applyState(JSON.parse(r));return true}return false});
+const loadSnaps=()=>safe(()=>{const r=localStorage.getItem(LS_SNAPS);if(r)S.snaps=JSON.parse(r)||[]});
+const saveSnapsToLS=()=>safe(()=>localStorage.setItem(LS_SNAPS,JSON.stringify(S.snaps)));
+
+// Undo/Redo
+const UNDO=[];const REDO=[];
+const pushUndo=()=>{UNDO.push(JSON.stringify(getState()));if(UNDO.length>50)UNDO.shift();REDO.length=0};
+const doUndo=()=>safe(()=>{if(!UNDO.length)return toast("warn","Nothing to undo","");REDO.push(JSON.stringify(getState()));applyState(JSON.parse(UNDO.pop()));showUndoBar("Undone")});
+const doRedo=()=>safe(()=>{if(!REDO.length)return toast("warn","Nothing to redo","");UNDO.push(JSON.stringify(getState()));applyState(JSON.parse(REDO.pop()));showUndoBar("Redone")});
+let _ubt;
+const showUndoBar=(msg)=>{sH("undo-msg",msg);$("undo-bar").classList.add("show");clearTimeout(_ubt);_ubt=setTimeout(()=>$("undo-bar")?.classList.remove("show"),4000)};
+
+// Toasts
+const toast=(type="info",title="",msg="",dur=4000)=>safe(()=>{
+  const icons={ok:"OK",warn:"!",err:"X",info:"i"};
+  const d=document.createElement("div");d.className="toast "+type;
+  d.innerHTML="<span>"+icons[type]+"</span><div class=toast-body><div class=toast-t>"+title+"</div><div class=toast-m>"+msg+"</div></div><button class=toast-x onclick=this.parentElement.remove()>x</button>";
+  const c=$("toasts");if(c){c.appendChild(d);setTimeout(()=>d.remove(),dur)}
+});
+
+// Modals
+const openModal=id=>{const m=$(id);if(m)m.classList.add("show")};
+const closeModal=id=>{const m=$(id);if(m)m.classList.remove("show")};
+
+// Snapshots
+const saveSnap=()=>safe(()=>{
+  const n=$("snap-inp")?.value?.trim()||"Snapshot "+new Date().toLocaleDateString();
+  S.snaps.unshift({id:Date.now(),name:n,date:new Date().toISOString(),data:JSON.stringify(getState())});
+  if(S.snaps.length>20)S.snaps.pop();
+  saveSnapsToLS();renderSnaps();toast("ok","Snapshot Saved",n);$("snap-inp").value="";
+});
+const loadSnap=id=>safe(()=>{
+  const s=S.snaps.find(x=>x.id==id);if(!s)return;
+  pushUndo();applyState(JSON.parse(s.data));closeModal("snap-modal");toast("ok","Loaded",s.name);
+});
+const delSnap=id=>safe(()=>{S.snaps=S.snaps.filter(x=>x.id!=id);saveSnapsToLS();renderSnaps()});
+const renderSnaps=()=>safe(()=>{
+  const el=$("snap-list");if(!el)return;
+  if(!S.snaps.length){el.innerHTML="<div style=font-size:10px;color:var(--t3);padding:10px>No snapshots yet.</div>";return}
+  el.innerHTML=S.snaps.map(s=>"<div class=snap-item><div style=flex:1><div style=font-weight:600;font-size:11px>"+s.name+"</div><div style=font-size:8px;color:var(--t3)>"+new Date(s.date).toLocaleString("en",{month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"})+"</div></div><button class='btn bpr btn-xs' onclick=loadSnap("+s.id+")>Load</button><button class='btn bsc btn-xs' onclick=delSnap("+s.id+")>x</button></div>").join("");
+});
+
+// Alert configs
+const renderAlertCfg=()=>safe(()=>{
+  const el=$("alert-cfg");if(!el)return;
+  el.innerHTML=S.alertCfgs.map(a=>"<div style=display:flex;align-items:center;gap:8px;margin-bottom:8px;padding:8px;border:1px solid var(--b1);border-radius:7px><input type=checkbox "+(a.active?"checked":"")+" onchange='safe(()=>{pushUndo();S.alertCfgs.find(x=>x.id=="+a.id+").active=this.checked;scheduleSave()})'><span style=flex:1;font-size:10.5px>"+a.label+"</span><button class='btn-rm' onclick='safe(()=>{pushUndo();S.alertCfgs=S.alertCfgs.filter(x=>x.id!="+a.id+");renderAlertCfg();scheduleSave()})'>x</button></div>").join("");
+});
+const addAlertCfg=()=>safe(()=>{S.alertCfgs.push({id:++S._ids.ac,metric:"netProfit",dir:">",threshold:0,unit:"SYP",label:"New Alert",active:true});renderAlertCfg()});
+const checkAlerts=R=>safe(()=>{
+  S.alertCfgs.filter(a=>a.active).forEach(a=>{
+    const v=R[a.metric]||0;
+    const pass=a.dir===">"?v>a.threshold:v<a.threshold;
+    if(pass&&!a._fired){toast("ok","Alert: "+a.label,"");a._fired=true}else if(!pass)delete a._fired;
+  });
+});
+
+// Tabs
+let curTab=0;
+const showTab=idx=>safe(()=>{
+  document.querySelectorAll(".tab").forEach((t,i)=>t.classList.toggle("active",i===idx));
+  document.querySelectorAll(".page").forEach((p,i)=>p.classList.toggle("active",i===idx));
+  curTab=idx;
+  if(idx===16)renderOps();
+  if(idx===17){renderMktIntel();setTimeout(()=>safe(()=>{const R=calcModel();drawMktChart(R)}),50);}// FIX: chart renders on tab show
+  if(idx===18){renderSuppliers();renderRFQ();}// FIX: RFQ renders on tab show
+  if(idx===19)renderSKUMgr();
+  if(idx===20)wiCalc();
+  recalc();
+});
+</script>
+<script>
+// ── SLIDERS ──────────────────────────────────────
+const SL_DEFS={
+  macro:[
+    {k:"exrate",l:"Exchange Rate (SYP/$)",mn:3000,mx:30000,st:500,f:n=>N(n)+" SYP/$"},
+    {k:"tax",l:"Corp. Tax Rate (%)",mn:0,mx:35,st:1,f:n=>P(n)},
+    {k:"discount",l:"Discount Rate (%)",mn:3,mx:40,st:1,f:n=>P(n)},
+    {k:"inflation",l:"Annual Inflation (%)",mn:0,mx:150,st:5,f:n=>P(n)},
+    {k:"priceEsc",l:"Price Escalation/yr (%)",mn:0,mx:30,st:1,f:n=>P(n)},
+    {k:"wcMonths",l:"Working Capital (months)",mn:1,mx:6,st:1,f:n=>N(n)+" mo"}
+  ],
+  prod:[
+    {k:"hrs",l:"Hours/Day",mn:6,mx:24,st:1,f:n=>N(n)+" hrs"},
+    {k:"days",l:"Days/Month",mn:20,mx:31,st:1,f:n=>N(n)+" days"},
+    {k:"loss",l:"Production Loss (%)",mn:0,mx:15,st:.5,f:n=>P(n)},
+    {k:"util",l:"Capacity Utilisation (%)",mn:10,mx:100,st:5,f:n=>P(n)}
+  ],
+  fin:[
+    {k:"finEq",l:"Equity Share (%)",mn:0,mx:100,st:5,f:n=>P(n)},
+    {k:"finInt",l:"Loan Interest Rate (%)",mn:3,mx:25,st:.5,f:n=>P(n)},
+    {k:"finYrs",l:"Loan Tenor (years)",mn:2,mx:15,st:1,f:n=>N(n)+" yr"},
+    {k:"finGrace",l:"Grace Period (months)",mn:0,mx:24,st:1,f:n=>N(n)+" mo"}
+  ],
+  prices:[],
+  speeds:[]
+};
+const buildSLGroup=(gk,tid)=>safe(()=>{
+  const el=$(tid);if(!el)return;
+  let defs=SL_DEFS[gk]||[];
+  if(gk==="prices")defs=S.skus.filter(s=>s.active).map(sk=>({k:"_pr_"+sk.id,l:sk.name+" Price (SYP)",mn:500,mx:10000,st:50,f:n=>N(n)+" SYP",_skuId:sk.id,_field:"price"}));
+  if(gk==="speeds")defs=S.skus.filter(s=>s.active).map(sk=>({k:"_sp_"+sk.id,l:sk.name+" Speed (btl/hr)",mn:500,mx:15000,st:500,f:n=>K(n)+" /hr",_skuId:sk.id,_field:"speed"}));
+  el.innerHTML=defs.map(sl=>{
+    const v=sl._skuId?S.skus.find(x=>x.id===sl._skuId)?.[sl._field]||0:S.sl[sl.k];
+    const onChange=sl._skuId?
+      "safe(()=>{pushUndo();S.skus.find(x=>x.id=="+sl._skuId+")['"+(sl._field)+"']= +this.value;document.getElementById('sv-"+sl.k+"').textContent='"+ sl.l+": '+this.value;updateMixBadge();scheduleSave();recalc()})": 
+      "onSL('"+ sl.k +"',+this.value)";
+    return "<div class=slrow><span class=sllbl>"+sl.l+"</span><input type=range class=slinp min="+sl.mn+" max="+sl.mx+" step="+sl.st+" value="+v+" oninput='"+ onChange +"'><span class=slval id='sv-"+sl.k+"'>"+ sl.f(v)+"</span></div>";
+  }).join("");
+});
+const onSL=(k,v)=>safe(()=>{pushUndo();S.sl[k]=v;const sl=[...SL_DEFS.macro,...SL_DEFS.prod,...SL_DEFS.fin].find(x=>x.k===k);if(sl){const e=$("sv-"+k);if(e)e.textContent=sl.f(v)}updateMixBadge();scheduleSave();recalc()});
+const buildAllSL=()=>{buildSLGroup("macro","sl-macro");buildSLGroup("prod","sl-prod");buildSLGroup("fin","sl-fin");buildSLGroup("prices","sl-prices");buildSLGroup("speeds","sl-speeds")};
+const updateMixBadge=()=>{
+  const acts=S.skus.filter(s=>s.active);const tot=acts.reduce((a,s)=>a+s.mix,0);
+  const pct=Math.round(tot);const ok=Math.abs(pct-100)<1;
+  [$("mix-bdg"),$("sku-mix-info")].forEach(el=>{if(el){el.textContent="Mix: "+pct+"%";el.className="mix-bdg "+(ok?"bok":"bwarn")}});
+};
+
+// ── ROW RENDERERS ─────────────────────────────────
+const renderRows=(type)=>safe(()=>{
+  const el=$("rows-"+type);if(!el)return;
+  const configs={
+    cx:{cols:["Description","Category","USD","SYP (M)",""],fields:["l","c","a"]},
+    ox:{cols:["Description","Category","USD/Mo","SYP/Mo",""],fields:["l","c","a"]},
+    hr:{cols:["Position","Department","Cnt","Salary $/mo","Total $/mo",""],fields:["pos","dept","cnt","sal"]},
+    rm:{cols:["Material","SKU","$/btl","SYP/btl","% Price",""],fields:["mat","sku","usd"]}
+  };
+  const cfg=configs[type];if(!cfg)return;
+  const exr=S.sl.exrate;
+  if(type==="cx"){
+    // Update contingency auto
+    const base=S.cx.filter(r=>r.c!=="Contingency").reduce((a,r)=>a+r.a,0);
+    const cont=S.cx.find(r=>r.c==="Contingency");if(cont)cont.a=Math.round(base*.05);
+    el.innerHTML=S.cx.map(r=>{
+      const isCont=r.c==="Contingency";
+      return "<div class=drg-cx><input class=ixs value='"+ eQ(r.l)+"' "+(isCont?"disabled":"onchange='safe(()=>{pushUndo();S.cx.find(x=>x.id=="+r.id+").l=this.value;scheduleSave()})'")+"><input class=ixs value='"+ eQ(r.c)+"' "+(isCont?"disabled":"onchange='safe(()=>{pushUndo();S.cx.find(x=>x.id=="+r.id+").c=this.value;scheduleSave()})'")+"><input type=number class=ixs value="+r.a+" "+(isCont?"disabled":"oninput='safe(()=>{pushUndo();S.cx.find(x=>x.id=="+r.id+").a=+this.value;renderRows('cx');scheduleSave();recalc()})'")+"><span style=font-family:var(--mono);font-size:9px;color:var(--t2)>"+ M(r.a*exr)+"</span>"+(isCont?"<span></span>":"<button class=btn-rm onclick='safe(()=>{pushUndo();S.cx=S.cx.filter(x=>x.id!="+r.id+");renderRows('cx');scheduleSave();recalc()})'>x</button>")+"</div>";
+    }).join("");
+    const tot=S.cx.reduce((a,r)=>a+r.a,0);
+    const tel=$("tot-cx");if(tel)tel.textContent="Total CAPEX: "+U(tot)+" / "+SYP(tot*exr);
+    const tb=$("tb-cx");if(tb)tb.textContent=S.cx.length;
+  } else if(type==="ox"){
+    el.innerHTML=S.ox.map(r=>"<div class=drg-ox><input class=ixs value='"+ eQ(r.l)+"' onchange='safe(()=>{pushUndo();S.ox.find(x=>x.id=="+r.id+").l=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.c)+"' onchange='safe(()=>{pushUndo();S.ox.find(x=>x.id=="+r.id+").c=this.value;scheduleSave()})'><input type=number class=ixs value="+r.a+" oninput='safe(()=>{pushUndo();S.ox.find(x=>x.id=="+r.id+").a=+this.value;renderRows('ox');scheduleSave();recalc()})'><span style=font-family:var(--mono);font-size:9px;color:var(--t2)>"+ M(r.a*exr)+"</span><button class=btn-rm onclick='safe(()=>{pushUndo();S.ox=S.ox.filter(x=>x.id!="+r.id+");renderRows('ox');scheduleSave();recalc()})'>x</button></div>").join("");
+    const tot=S.ox.reduce((a,r)=>a+r.a,0);
+    const tel=$("tot-ox");if(tel)tel.textContent="Total OPEX: "+U(tot)+"/mo / "+SYP(tot*exr)+"/mo";
+    const tb=$("tb-ox");if(tb)tb.textContent=S.ox.length;
+  } else if(type==="hr"){
+    el.innerHTML=S.hr.map(r=>"<div class=drg-hr><input class=ixs value='"+ eQ(r.pos)+"' onchange='safe(()=>{pushUndo();S.hr.find(x=>x.id=="+r.id+").pos=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.dept)+"' onchange='safe(()=>{pushUndo();S.hr.find(x=>x.id=="+r.id+").dept=this.value;scheduleSave()})'><input type=number class=ixs value="+r.cnt+" min=1 oninput='safe(()=>{pushUndo();S.hr.find(x=>x.id=="+r.id+").cnt=+this.value;renderRows('hr');scheduleSave();recalc()})'><input type=number class=ixs value="+r.sal+" oninput='safe(()=>{pushUndo();S.hr.find(x=>x.id=="+r.id+").sal=+this.value;renderRows('hr');scheduleSave();recalc()})'><span style=font-family:var(--mono);font-size:9px;color:var(--c1)>"+U(r.cnt*r.sal)+"</span><button class=btn-rm onclick='safe(()=>{pushUndo();S.hr=S.hr.filter(x=>x.id!="+r.id+");renderRows('hr');scheduleSave();recalc()})'>x</button></div>").join("");
+    const tot=S.hr.reduce((a,r)=>a+r.cnt*r.sal,0);
+    const tel=$("tot-hr");if(tel)tel.textContent="Total Payroll: "+U(tot)+"/mo";
+    const tb=$("tb-hr");if(tb)tb.textContent=S.hr.reduce((a,r)=>a+r.cnt,0);
+  } else if(type==="rm"){
+    el.innerHTML=S.rm.map(r=>"<div class=drg-rm><input class=ixs value='"+ eQ(r.mat)+"' onchange='safe(()=>{pushUndo();S.rm.find(x=>x.id=="+r.id+").mat=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.sku)+"' onchange='safe(()=>{pushUndo();S.rm.find(x=>x.id=="+r.id+").sku=this.value;scheduleSave()})'><input type=number class=ixs value="+r.usd+" step=.0001 oninput='safe(()=>{pushUndo();S.rm.find(x=>x.id=="+r.id+").usd=+this.value;renderRows('rm');scheduleSave();recalc()})'><span style=font-family:var(--mono);font-size:9px;color:var(--t2) id='rm-syp"+r.id+"'>"+ N(r.usd*exr,2)+"</span><span style=font-size:9px;color:var(--t3) id='rm-p"+r.id+"'>--</span><button class=btn-rm onclick='safe(()=>{pushUndo();S.rm=S.rm.filter(x=>x.id!="+r.id+");renderRows('rm');scheduleSave();recalc()})'>x</button></div>").join("");
+    const tb=$("tb-rm");if(tb)tb.textContent=S.rm.length;
+  }
+});
+const addRow=(type)=>safe(()=>{
+  pushUndo();
+  const id=++S._ids[type];
+  if(type==="cx")S.cx.splice(S.cx.length-1,0,{id,l:"New Item",c:"Equipment",a:0});
+  else if(type==="ox")S.ox.push({id,l:"New Item",c:"Admin",a:0});
+  else if(type==="hr")S.hr.push({id,pos:"New Position",dept:"Admin",cnt:1,sal:300});
+  else if(type==="rm")S.rm.push({id,mat:"New Material",sku:"all",usd:0});
+  renderRows(type);scheduleSave();
+});
+const renderAllRows=()=>["cx","ox","hr","rm"].forEach(t=>renderRows(t));
+
+// SKU Manager
+const renderSKUMgr=()=>safe(()=>{
+  const el=$("rows-sk");if(!el)return;
+  el.innerHTML=S.skus.map(sk=>"<div class=drg-sk><input class=ixs value='"+ eQ(sk.name)+"' onchange='safe(()=>{pushUndo();S.skus.find(x=>x.id=="+sk.id+").name=this.value;buildAllSL();scheduleSave();recalc()})'><input type=number class=ixs value="+sk.liters+" step=.01 oninput='safe(()=>{pushUndo();S.skus.find(x=>x.id=="+sk.id+").liters=+this.value;scheduleSave();recalc()})'><input type=number class=ixs value="+sk.speed+" step=500 oninput='safe(()=>{pushUndo();S.skus.find(x=>x.id=="+sk.id+").speed=+this.value;scheduleSave();recalc()})'><input type=number class=ixs value="+sk.mix+" min=0 max=100 oninput='safe(()=>{pushUndo();S.skus.find(x=>x.id=="+sk.id+").mix=+this.value;updateMixBadge();scheduleSave();recalc()})'><input type=number class=ixs value="+sk.price+" oninput='safe(()=>{pushUndo();S.skus.find(x=>x.id=="+sk.id+").price=+this.value;scheduleSave();recalc()})'><input type=number class=ixs value="+sk.preform+" step=.0001 oninput='safe(()=>{pushUndo();S.skus.find(x=>x.id=="+sk.id+").preform=+this.value;scheduleSave();recalc()})'><input type=number class=ixs value="+sk.label+" step=.0001 oninput='safe(()=>{pushUndo();S.skus.find(x=>x.id=="+sk.id+").label=+this.value;scheduleSave();recalc()})'><button class=btn-rm onclick=removeSKU("+sk.id+")>x</button></div>").join("");
+  updateMixBadge();
+});
+const addSKU=()=>safe(()=>{pushUndo();const id=++S._ids.sk;S.skus.push({id,name:"SKU"+id,liters:1,speed:5000,mix:0,price:2500,preform:.025,label:.008,cap:.0053,active:true});renderSKUMgr();buildAllSL();scheduleSave();recalc()});
+const removeSKU=id=>safe(()=>{if(S.skus.length<=1)return toast("warn","Cannot remove","At least 1 SKU required");pushUndo();S.skus=S.skus.filter(s=>s.id!=id);renderSKUMgr();buildAllSL();scheduleSave();recalc()});
+
+// Operations
+const renderShifts=()=>safe(()=>{
+  const el=$("shifts-cont");if(!el)return;
+  el.innerHTML=S.shifts.map(sh=>"<div class=drg-row><input class=ixs value='"+ eQ(sh.name)+"' style='min-width:90px' onchange='safe(()=>{pushUndo();S.shifts.find(x=>x.id=="+sh.id+").name=this.value;scheduleSave()})'><input type=time class=ixs value="+sh.start+" onchange='safe(()=>{pushUndo();S.shifts.find(x=>x.id=="+sh.id+").start=this.value;scheduleSave()})'><input type=time class=ixs value="+sh.end+" onchange='safe(()=>{pushUndo();S.shifts.find(x=>x.id=="+sh.id+").end=this.value;scheduleSave()})'><input type=number class=ixs value="+sh.workers+" min=1 style='width:60px' oninput='safe(()=>{pushUndo();S.shifts.find(x=>x.id=="+sh.id+").workers=+this.value;scheduleSave()})'><select class=sel style='width:85px' onchange='safe(()=>{pushUndo();S.shifts.find(x=>x.id=="+sh.id+").active=this.value==='true';scheduleSave();recalc()})'><option value=true "+(sh.active?"selected":"")+">Active</option><option value=false "+(sh.active?"":"selected")+">Inactive</option></select><button class=btn-rm onclick='safe(()=>{pushUndo();S.shifts=S.shifts.filter(x=>x.id!="+sh.id+");renderShifts();scheduleSave()})'>x</button></div>").join("");
+  const ki=$("k-op2");if(ki)ki.textContent=S.shifts.filter(s=>s.active).length;
+  const ks=$("k-op2s");if(ks)ks.textContent=S.shifts.filter(s=>s.active).map(s=>s.name).join(", ")||"None";
+});
+const addShift=()=>safe(()=>{pushUndo();S.shifts.push({id:++S._ids.shift,name:"New Shift",start:"06:00",end:"14:00",workers:6,active:true});renderShifts();scheduleSave()});
+const renderInv=()=>safe(()=>{
+  const el=$("inv-cont");if(!el)return;
+  el.innerHTML=S.inventory.map(it=>{const pct=Math.min(100,Math.round(it.stock/Math.max(1,it.reorder)*50));const col=pct>60?"var(--green)":pct>30?"var(--amber)":"var(--red)";return"<div class=drg-row><input class=ixs value='"+ eQ(it.mat)+"' style='flex:2' onchange='safe(()=>{pushUndo();S.inventory.find(x=>x.id=="+it.id+").mat=this.value;scheduleSave()})'><div style='flex:1'><div style='display:flex;align-items:center;gap:6px'><input type=number class=ixs value="+it.stock+" oninput='safe(()=>{pushUndo();S.inventory.find(x=>x.id=="+it.id+").stock=+this.value;renderInv();scheduleSave()})'><span style='font-size:9px;color:var(--t3)'>"+ it.unit+"</span></div><div style='height:3px;background:var(--b1);border-radius:2px;margin-top:3px'><div style='height:100%;width:"+pct+"%;background:"+col+";border-radius:2px'></div></div></div><button class=btn-rm onclick='safe(()=>{pushUndo();S.inventory=S.inventory.filter(x=>x.id!="+it.id+");renderInv();scheduleSave()})'>x</button></div>"}).join("");
+  const ki=$("k-op4");if(ki)ki.textContent=N(Math.round(S.inventory.reduce((a,i)=>a+(i.reorder>0?i.stock/i.reorder:0),0)/S.inventory.length*30))+" days";
+});
+const addInvItem=()=>safe(()=>{pushUndo();S.inventory.push({id:++S._ids.inv,mat:"New Material",stock:0,unit:"pcs",reorder:10000,lead:14,supplier:"TBD"});renderInv();scheduleSave()});
+const renderOrders=()=>safe(()=>{
+  const el=$("orders-cont");if(!el)return;
+  const statusColor={"Processing":"var(--c1)","Pending":"var(--amber)","Completed":"var(--green)","Cancelled":"var(--red)"};
+  el.innerHTML=S.orders.map(o=>"<div class=drg-ord><span style='font-family:var(--mono);font-size:9px'>#"+o.id+"</span><input class=ixs value='"+ eQ(o.customer)+"' onchange='safe(()=>{pushUndo();S.orders.find(x=>x.id=="+o.id+").customer=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(o.sku)+"' onchange='safe(()=>{pushUndo();S.orders.find(x=>x.id=="+o.id+").sku=this.value;scheduleSave()})'><input type=number class=ixs value="+o.qty+" oninput='safe(()=>{pushUndo();S.orders.find(x=>x.id=="+o.id+").qty=+this.value;renderOrders();scheduleSave()})'><input type=date class=ixs value="+o.due+" onchange='safe(()=>{pushUndo();S.orders.find(x=>x.id=="+o.id+").due=this.value;scheduleSave()})'><select class=sel onchange='safe(()=>{pushUndo();S.orders.find(x=>x.id=="+o.id+").status=this.value;renderOrders();scheduleSave()})'>"+ ["Pending","Processing","Completed","Cancelled"].map(s=>"<option "+(s===o.status?"selected":"")+">"+s+"</option>").join("")+"</select><button class=btn-rm onclick='safe(()=>{pushUndo();S.orders=S.orders.filter(x=>x.id!="+o.id+");renderOrders();scheduleSave()})'>x</button></div>").join("");
+  const tot=S.orders.filter(o=>o.status==="Pending"||o.status==="Processing").length;
+  const tel=$("tot-orders");if(tel)tel.textContent="Open Orders: "+tot;
+  const ki=$("k-op3");if(ki)ki.textContent=tot;
+});
+const addOrder=()=>safe(()=>{pushUndo();S.orders.push({id:++S._ids.ord,customer:"New Customer",sku:"500ml",qty:10,due:new Date(Date.now()+7*864e5).toISOString().split("T")[0],status:"Pending"});renderOrders();scheduleSave()});
+const renderOps=()=>safe(()=>{renderShifts();renderInv();renderOrders()});
+
+// Market Intel — FIX: chart always redraws on tab show
+const renderMktRows=()=>safe(()=>{
+  const el=$("rows-mkt");if(!el)return;
+  el.innerHTML=S.mkt.map(r=>{
+    const diff=r.ours>0&&r.consumer>0?Math.round((r.ours-r.consumer)/r.consumer*100):null;
+    return"<div class=drg-mkt><input class=ixs value='"+ eQ(r.size)+"' onchange='safe(()=>{pushUndo();S.mkt.find(x=>x.id=="+r.id+").size=this.value;renderMktRows();scheduleSave()})'><input class=ixs value='"+ eQ(r.pack)+"' onchange='safe(()=>{pushUndo();S.mkt.find(x=>x.id=="+r.id+").pack=this.value;scheduleSave()})'><span style='cursor:pointer;font-family:var(--mono);font-size:9px;color:var(--t2)' onclick='inlineEdit(this,'mkt',"+r.id+",'factory')'>"+N(r.factory)+"</span><span style='cursor:pointer;font-family:var(--mono);font-size:9px' onclick='inlineEdit(this,'mkt',"+r.id+",'wholesale')'>"+N(r.wholesale)+"</span><span style='cursor:pointer;font-family:var(--mono);font-size:9px;color:var(--c1)' onclick='inlineEdit(this,'mkt',"+r.id+",'consumer')'>"+N(r.consumer)+"</span><span style='cursor:pointer;font-family:var(--mono);font-size:9px;color:var(--c2)' onclick='inlineEdit(this,'mkt',"+r.id+",'ours')'>"+( r.ours>0?N(r.ours):"--")+"</span><span class='bdg "+(diff===null?"binfo":diff<=0?"bok":"bwarn")+"' style=font-size:7px>"+(diff!==null?diff+"%":"--")+"</span><input class=ixs value='"+ eQ(r.notes||"")+"' onchange='safe(()=>{pushUndo();S.mkt.find(x=>x.id=="+r.id+").notes=this.value;scheduleSave()})'><button class=btn-rm onclick='safe(()=>{pushUndo();S.mkt=S.mkt.filter(x=>x.id!="+r.id+");renderMktRows();const R=calcModel();drawMktChart(R);scheduleSave()})'>x</button></div>";
+  }).join("");
+});
+const addMktRow=()=>safe(()=>{pushUndo();S.mkt.push({id:++S._ids.mkt,size:"New",pack:"",factory:0,wholesale:0,consumer:0,ours:0,notes:""});renderMktRows();scheduleSave()});
+const renderConds=()=>safe(()=>{
+  const el=$("rows-cond");if(!el)return;
+  el.innerHTML=S.conds.map(c=>"<div class=drg-cond><input class=ixs value='"+ eQ(c.factor)+"' onchange='safe(()=>{pushUndo();S.conds.find(x=>x.id=="+c.id+").factor=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(c.val)+"' onchange='safe(()=>{pushUndo();S.conds.find(x=>x.id=="+c.id+").val=this.value;scheduleSave()})'><select class=sel onchange='safe(()=>{pushUndo();S.conds.find(x=>x.id=="+c.id+").trend=this.value;scheduleSave()})'>"+ ["up","stable","down"].map(t=>"<option "+(t===c.trend?"selected":"")+">"+t+"</option>").join("")+"</select><select class=sel onchange='safe(()=>{pushUndo();S.conds.find(x=>x.id=="+c.id+").impact=this.value;scheduleSave()})'>"+ ["High","Medium","Low"].map(v=>"<option "+(v===c.impact?"selected":"")+">"+v+"</option>").join("")+"</select><input class=ixs value='"+ eQ(c.notes||"")+"' onchange='safe(()=>{pushUndo();S.conds.find(x=>x.id=="+c.id+").notes=this.value;scheduleSave()})'><button class=btn-rm onclick='safe(()=>{pushUndo();S.conds=S.conds.filter(x=>x.id!="+c.id+");renderConds();scheduleSave()})'>x</button></div>").join("");
+});
+const addCond=()=>safe(()=>{pushUndo();S.conds.push({id:++S._ids.cond,factor:"New Factor",val:"--",trend:"stable",impact:"Medium",notes:""});renderConds();scheduleSave()});
+const renderCompP=()=>safe(()=>{
+  const el=$("rows-comp-p");if(!el)return;
+  el.innerHTML=S.compP.map(r=>"<div class=drg-comp-p><input class=ixs type=date value="+r.date+" onchange='safe(()=>{pushUndo();S.compP.find(x=>x.id=="+r.id+").date=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.brand)+"' onchange='safe(()=>{pushUndo();S.compP.find(x=>x.id=="+r.id+").brand=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.sku)+"' onchange='safe(()=>{pushUndo();S.compP.find(x=>x.id=="+r.id+").sku=this.value;scheduleSave()})'><span style='cursor:pointer;font-family:var(--mono);font-size:9px;color:var(--c1)' onclick='inlineEdit(this,'compP',"+r.id+",'price')'>"+N(r.price)+"</span><input class=ixs value='"+ eQ(r.channel)+"' onchange='safe(()=>{pushUndo();S.compP.find(x=>x.id=="+r.id+").channel=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.notes||"")+"' onchange='safe(()=>{pushUndo();S.compP.find(x=>x.id=="+r.id+").notes=this.value;scheduleSave()})'><button class=btn-rm onclick='safe(()=>{pushUndo();S.compP=S.compP.filter(x=>x.id!="+r.id+");renderCompP();scheduleSave()})'>x</button></div>").join("");
+});
+const addCompP=()=>safe(()=>{pushUndo();S.compP.push({id:++S._ids.compP,date:new Date().toISOString().split("T")[0],brand:"",sku:"500ml",price:0,channel:"Retail",notes:""});renderCompP();scheduleSave()});
+const renderMktIntel=()=>safe(()=>{renderMktRows();renderConds();renderCompP()});
+
+// Inline Edit
+const inlineEdit=(span,arr,id,field)=>safe(()=>{
+  if(span._editing)return;span._editing=true;
+  const obj=S[arr]?.find(x=>x.id==id);if(!obj)return;
+  const orig=span.textContent;
+  span.innerHTML="<input class=ixs value="+(obj[field]||0)+" type=number step=any style='width:80px;border:1px solid var(--c1);background:var(--bg2);font-family:var(--mono);font-size:10px;padding:2px 4px'>" ;
+  const inp=span.querySelector("input");inp.focus();inp.select();
+  const commit=()=>{
+    const v=parseFloat(inp.value);
+    if(!isNaN(v)){pushUndo();obj[field]=v}
+    span._editing=false;span.textContent=isNaN(v)?orig:N(v,0);
+    scheduleSave();recalc();
+    if(arr==="mkt"){renderMktRows();const R=calcModel();drawMktChart(R);}// FIX: always update chart
+  };
+  inp.onblur=commit;inp.onkeydown=e=>{if(e.key==="Enter")inp.blur();if(e.key==="Escape"){span._editing=false;span.textContent=orig}};
+});
+
+// Suppliers + RFQ — FIX: renderRFQ always called
+const renderSuppliers=()=>safe(()=>{
+  const el=$("sup-cont");if(!el)return;
+  el.innerHTML=S.suppliers.map(sup=>"<div class=sup-card><div style='display:flex;align-items:center;gap:10px;margin-bottom:10px'><div style='width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--c1),var(--c5));display:flex;align-items:center;justify-content:center;font-size:16px'>"+( sup.country==="China"?"CN":sup.country==="Syria"?"SY":"--")+"</div><div style=flex:1><div style='font-weight:700;font-size:12px'>"+sup.name+" <span class='bdg "+(sup.type==="Primary"?"btl":"binfo")+"' style=font-size:7px>"+sup.type+"</span></div><div style='font-size:8.5px;color:var(--t3)'>"+sup.country+" - "+sup.contact+"</div><div style='color:var(--amber);font-size:10px'>"+ "*".repeat(sup.rating)+"</div></div><button class=btn-rm onclick='safe(()=>{pushUndo();S.suppliers=S.suppliers.filter(x=>x.id!="+sup.id+");renderSuppliers();scheduleSave()})'>x</button></div><div class=tw style=max-height:180px><table class=tbl><thead><tr><th>Material</th><th>USD/unit</th><th>MOQ</th><th>Lead days</th><th></th></tr></thead><tbody>"+sup.items.map((it,i)=>"<tr><td><input class=ixs value='"+ eQ(it.mat)+"' onchange='safe(()=>{pushUndo();S.suppliers.find(x=>x.id=="+sup.id+").items["+i+"].mat=this.value;scheduleSave()})'></td><td><input type=number class=ixs value="+it.usd+" step=.0001 oninput='safe(()=>{pushUndo();S.suppliers.find(x=>x.id=="+sup.id+").items["+i+"].usd=+this.value;scheduleSave();recalc()})'></td><td><input type=number class=ixs value="+it.moq+" oninput='safe(()=>{pushUndo();S.suppliers.find(x=>x.id=="+sup.id+").items["+i+"].moq=+this.value;scheduleSave()})'></td><td><input type=number class=ixs value="+it.lead+" oninput='safe(()=>{pushUndo();S.suppliers.find(x=>x.id=="+sup.id+").items["+i+"].lead=+this.value;scheduleSave()})'></td><td><button class=btn-rm onclick='safe(()=>{pushUndo();S.suppliers.find(x=>x.id=="+sup.id+").items.splice("+i+",1);renderSuppliers();scheduleSave()})'>x</button></td></tr>").join("")+"</tbody></table></div><button class=btn-add style='margin-top:6px;font-size:8.5px' onclick=addSupItem("+sup.id+")>+ Add Item</button></div>").join("");
+  const mats=[...new Set(S.suppliers.flatMap(s=>s.items.map(i=>i.mat)))];
+  sH("tbl-sup-comp","<thead><tr><th>Material</th>"+S.suppliers.map(s=>"<th>"+s.name+"</th>").join("")+"</tr></thead><tbody>"+mats.map(mat=>"<tr><td>"+mat+"</td>"+S.suppliers.map(sup=>{const it=sup.items.find(i=>i.mat===mat);return it?"<td style='font-family:var(--mono);color:var(--c1)'>"+U(it.usd)+"</td>":"<td style=color:var(--t3)>--</td>"}).join("")+"</tr>").join("")+"</tbody>");
+});
+const addSupplier=()=>safe(()=>{pushUndo();S.suppliers.push({id:++S._ids.sup,name:"New Supplier",country:"TBD",contact:"",phone:"",email:"",rating:3,type:"Backup",items:[]});renderSuppliers();scheduleSave()});
+const addSupItem=supId=>safe(()=>{pushUndo();const s=S.suppliers.find(x=>x.id===supId);if(s)s.items.push({mat:"New Item",usd:0,moq:1000,lead:14});renderSuppliers();scheduleSave()});
+
+// FIX: renderRFQ now called standalone (fixed from v5)
+const renderRFQ=()=>safe(()=>{
+  const el=$("rows-rfq");if(!el)return;
+  el.innerHTML=S.rfq.map(r=>"<div class=drg-rfq><input class=ixs type=date value="+r.date+" onchange='safe(()=>{pushUndo();S.rfq.find(x=>x.id=="+r.id+").date=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.sup)+"' onchange='safe(()=>{pushUndo();S.rfq.find(x=>x.id=="+r.id+").sup=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.item)+"' onchange='safe(()=>{pushUndo();S.rfq.find(x=>x.id=="+r.id+").item=this.value;scheduleSave()})'><input class=ixs value='"+ eQ(r.qty)+"' onchange='safe(()=>{pushUndo();S.rfq.find(x=>x.id=="+r.id+").qty=this.value;scheduleSave()})'><input type=number class=ixs value="+(r.unitP||"")+" step=.0001 placeholder=-- oninput='safe(()=>{pushUndo();S.rfq.find(x=>x.id=="+r.id+").unitP=+this.value||null;scheduleSave()})'><input type=number class=ixs value="+r.total+" oninput='safe(()=>{pushUndo();S.rfq.find(x=>x.id=="+r.id+").total=+this.value;scheduleSave()})'><select class=sel onchange='safe(()=>{pushUndo();S.rfq.find(x=>x.id=="+r.id+").status=this.value;renderRFQ();scheduleSave()})'>"+ ["Quoted","Planned","Ordered","Received"].map(s=>"<option "+(s===r.status?"selected":"")+">"+s+"</option>").join("")+"</select><button class=btn-rm onclick='safe(()=>{pushUndo();S.rfq=S.rfq.filter(x=>x.id!="+r.id+");renderRFQ();scheduleSave()})'>x</button></div>").join("");
+});
+const addRFQ=()=>safe(()=>{pushUndo();S.rfq.push({id:++S._ids.rfq,date:new Date().toISOString().split("T")[0],sup:"",item:"",qty:"",unitP:null,total:0,status:"Planned"});renderRFQ();scheduleSave()});
+
+// Export/Import
+const exportJSON=()=>safe(()=>{const b=new Blob([JSON.stringify(getState(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(b);a.download="NAQI_v6_"+new Date().toISOString().split("T")[0]+".json";a.click();toast("ok","Exported","Model saved")});
+const handleImport=inp=>safe(()=>{const f=inp.files[0];if(!f)return;const r=new FileReader();r.onload=e=>safe(()=>{pushUndo();applyState(JSON.parse(e.target.result));toast("ok","Imported",f.name);inp.value=""});r.readAsText(f)});
+
+// Keyboard
+document.addEventListener("keydown",e=>{if((e.ctrlKey||e.metaKey)&&e.key==="z"){e.preventDefault();doUndo()}if((e.ctrlKey||e.metaKey)&&(e.key==="y"||e.key==="Y")){e.preventDefault();doRedo()}});
+
+const renderAll=()=>safe(()=>{renderAllRows();buildAllSL();updateMixBadge();renderSKUMgr();if(curTab===16)renderOps();if(curTab===17)renderMktIntel();if(curTab===18){renderSuppliers();renderRFQ();}if(curTab===19)renderSKUMgr()});
+</script>
+<script>
+// ── CALCULATION ENGINE ────────────────────────────
+const calcModel=(ov={})=>{
+  const sl={...S.sl,...ov};const exr=Math.max(1,sl.exrate);
+  const acts=S.skus.filter(s=>s.active);const totHrs=sl.hrs*sl.days;const util=sl.util/100;const lf=1-sl.loss/100;
+  const totMix=acts.reduce((a,s)=>a+s.mix,0)||1;
+  const cxBase=S.cx.filter(r=>r.c!=="Contingency").reduce((a,r)=>a+r.a,0);
+  const cxCont=cxBase*.05;const totCx=cxBase+cxCont;
+  const totOx=S.ox.reduce((a,r)=>a+r.a,0);const wc=totOx*sl.wcMonths;const totInv=totCx+wc;
+  const hrPay=S.hr.reduce((a,r)=>a+r.cnt*r.sal,0);
+  const skuR=acts.map(sk=>{
+    const mf=sk.mix/totMix;const gb=sk.speed*totHrs*util*mf;const nb=gb*lf;
+    const rmCost=S.rm.filter(r=>r.sku===sk.name||r.sku==="all").reduce((a,r)=>a+r.usd,0);
+    const pkgSYP=rmCost*exr;const oxPerB=nb>0?(totOx*exr)/nb:0;
+    const rev=nb*sk.price;const cogs=nb*(pkgSYP+oxPerB);const gp=rev-cogs;const gm=rev>0?gp/rev*100:0;
+    return{...sk,mf,gb,nb,rmCost,pkgSYP,oxPerB,rev,cogs,gp,gm};
+  });
+  const totNb=skuR.reduce((a,s)=>a+s.nb,0);const totRev=skuR.reduce((a,s)=>a+s.rev,0);
+  const totCogs=skuR.reduce((a,s)=>a+s.cogs,0);const gp=totRev-totCogs;const gm=totRev>0?gp/totRev*100:0;
+  const tax=Math.max(0,gp*sl.tax/100);const netProfit=gp-tax;const nm=totRev>0?netProfit/totRev*100:0;
+  const bP=totNb>0?totRev/totNb:0;const bV=totNb>0?totCogs/totNb:0;const cm=bP-bV;
+  const fixC=totOx*exr;const beBtl=cm>0?fixC/cm:0;const beRev=beBtl*bP;const sfty=totRev>0?(totRev-beRev)/totRev*100:0;
+  const loan=totInv*(1-sl.finEq/100);const eq=totInv*sl.finEq/100;
+  const mRate=sl.finInt/100/12;const totM=sl.finYrs*12;const grace=Math.min(sl.finGrace,totM-1);
+  let mpay=0;
+  if(loan>0&&mRate>0&&totM>grace){const n=totM-grace;mpay=loan*mRate*Math.pow(1+mRate,n)/(Math.pow(1+mRate,n)-1)}
+  const annDebt=mpay*12;const dscr=annDebt>0?netProfit*12/annDebt:99;
+  let amort=[],bal=loan;
+  for(let m=1;m<=totM&&bal>1;m++){const ip=bal*mRate;const pp=m<=grace?0:Math.min(mpay-ip,bal);bal-=pp;amort.push({m,ip,pp,pay:m<=grace?ip:mpay,bal:Math.max(0,bal)})}
+  const ramp=[.4,.6,.78,.9,1,1,1,1,1,1];let cumCF=0,cf10=[];
+  for(let y=0;y<10;y++){
+    const esc=Math.pow(1+sl.priceEsc/100,y);const r=ramp[y];
+    const rev_y=totRev*12*r*esc;const np_y=Math.max(0,(gp-tax)*12*r);const debt_y=y<sl.finYrs?annDebt:0;
+    const cf_y=np_y-debt_y;cumCF+=cf_y;const disc=cf_y/Math.pow(1+sl.discount/100,y+1);
+    cf10.push({y:y+1,r,rev:rev_y,np:np_y,cf:cf_y,cum:cumCF,disc,debt:debt_y});
+  }
+  const npv10=cf10.reduce((a,c)=>a+c.disc,0)-totInv;
+  let irr10=0;try{let lo=-.99,hi=50;for(let i=0;i<100;i++){const mid=(lo+hi)/2;const v=cf10.reduce((a,c,i2)=>a+c.cf/Math.pow(1+mid,i2+1),0)-totInv;if(Math.abs(v)<1)break;v>0?lo=mid:hi=mid}irr10=(lo+hi)/2*100}catch(_){}
+  let payback=0,cp=0;for(const c of cf10){cp+=c.cf;if(cp>=totInv){payback=c.y;break}}if(!payback)payback=cf10.length+1;
+  return{sl,exr,acts,skuR,totHrs,totNb,totCx,cxBase,cxCont,wc,totInv,totOx,hrPay,totRev,totCogs,gp,gm,tax,netProfit,nm,bP,bV,cm,beBtl,beRev,sfty,loan,eq,mpay,annDebt,dscr,amort,cf10,npv10,irr10,payback};
+};
+
+// ── HEADER + DASHBOARD UPDATES ────────────────────
+const updateHdr=R=>safe(()=>{
+  const s=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  s("hkpi-profit",M(R.netProfit)+" SYP");
+  s("hkpi-profit-mc",U(Math.round(R.netProfit/R.exr))+" / "+N(Math.round(R.netProfit/R.exr/3.75))+" SAR");
+  s("hkpi-rev",M(R.totRev)+" SYP");
+  s("hkpi-rev-mc",U(Math.round(R.totRev/R.exr))+" USD");
+  s("hkpi-capex",U(R.totCx));s("hkpi-pay",N(R.payback,1)+" yr");s("hkpi-irr",P(R.irr10));s("hkpi-btl",K(R.totNb));
+  const d=$("hkpi-dscr");if(d){d.textContent=N(R.dscr,1)+"x";d.style.color=R.dscr>1.25?"var(--green)":R.dscr>1?"var(--amber)":"var(--red)"}
+});
+const updateDash=R=>safe(()=>{
+  const s=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  s("d-profit",M(R.netProfit)+" SYP");s("d-profit-s",U(R.netProfit/R.exr)+"/mo | "+N(R.netProfit/R.exr/3.75,0)+" SAR");
+  s("d-rev",M(R.totRev)+" SYP");s("d-rev-s",U(R.totRev/R.exr)+"/mo");
+  s("d-gm",P(R.gm));s("d-gm-s",M(R.gp)+" SYP gross profit");
+  s("d-irr",P(R.irr10));s("d-pay",N(R.payback,1)+" years");s("d-pay-s",U(R.totInv)+" total investment");
+  s("d-btl",N(R.totNb));s("d-btl-s",K(R.totNb/R.sl.days)+" bottles/day");
+  s("d-npv",M(R.npv10)+" SYP");s("d-npv-s",U(R.npv10/R.exr)+" USD");
+  s("d-inv",U(R.totInv));s("d-inv-s","CAPEX "+U(R.totCx)+" + WC "+U(R.wc));
+  // CAPEX KPIs
+  s("k-cx1",U(R.totCx));s("k-cx1s",SYP(R.totCx*R.exr));s("k-cx2",U(R.wc));s("k-cx2s",SYP(R.wc*R.exr));
+  s("k-cx3",U(R.totInv));s("k-cx3s",SYP(R.totInv*R.exr));
+  const cont=S.cx.find(r=>r.c==="Contingency");s("k-cx4",U(cont?.a||0));
+  // OPEX KPIs
+  s("k-ox1",U(R.totOx));s("k-ox1s",SYP(R.totOx*R.exr));s("k-ox2",U(R.totOx*12));s("k-ox2s",SYP(R.totOx*12*R.exr));
+  s("k-ox3",P(R.totOx*R.exr/R.totRev*100));s("k-ox4",R.totNb>0?N(R.totOx*R.exr/R.totNb)+" SYP":"--");
+  // HR KPIs
+  s("k-hr1",S.hr.reduce((a,r)=>a+r.cnt,0));s("k-hr2",U(R.hrPay));s("k-hr2s",SYP(R.hrPay*R.exr));
+  s("k-hr3",U(R.hrPay/Math.max(1,S.hr.reduce((a,r)=>a+r.cnt,0))));
+  s("k-hr4",P(R.hrPay/Math.max(1,R.totOx)*100));
+  // Production KPIs
+  s("k-p1",N(R.totNb));s("k-p2",N(R.totHrs));s("k-p2s",R.sl.hrs+" hrs/day x "+R.sl.days+" days");
+  s("k-p3",R.totNb>0?N(R.totCogs/R.totNb)+" SYP":"--");s("k-p4",P(R.gm));
+  // BE KPIs
+  s("k-be1",N(R.beBtl,0));s("k-be1s",P(R.beBtl/Math.max(1,R.totNb)*100)+" of capacity");
+  s("k-be2",M(R.beRev));s("k-be2s",U(R.beRev/R.exr));
+  s("k-be3",N(R.cm)+" SYP");s("k-be4",P(R.sfty));
+  // CF KPIs
+  s("k-cf1",U(R.totInv));s("k-cf1s",SYP(R.totInv*R.exr));s("k-cf2",N(R.payback,1)+" years");
+  s("k-cf3",P(R.irr10));s("k-cf4",M(R.npv10));s("k-cf4s",U(R.npv10/R.exr)+" USD");
+  // Ops KPIs
+  const totBtlDay=R.skuR.reduce((a,s)=>a+s.nb/R.sl.days,0);s("k-op1",N(totBtlDay,0));
+});
+const updateTables=R=>safe(()=>{
+  // Ministry table
+  sH("tbl-ministry","<thead><tr><th>Size</th><th>Factory SYP</th><th>Consumer SYP</th><th>NAQI Price</th><th>Diff</th></tr></thead><tbody>"+S.mkt.filter(m=>m.ours>0).map(m=>{const d=((m.ours-m.consumer)/m.consumer*100).toFixed(1);return"<tr><td>"+m.size+"</td><td style=font-family:var(--mono)>"+N(m.factory)+"</td><td style=font-family:var(--mono)>"+N(m.consumer)+"</td><td style="font-family:var(--mono);color:var(--c1)">"+N(m.ours)+"</td><td><span class='bdg "+(+d<=0?"bok":"bwarn")+"'>"+(d>0?"+":"")+d+"%</span></td></tr>"}).join("")+"</tbody>");
+  // Return table  
+  sH("tbl-ret","<thead><tr><th>Metric</th><th>Value</th><th>USD</th></tr></thead><tbody><tr><td>Monthly Net Profit</td><td style="font-family:var(--mono);color:var(--c1)">"+M(R.netProfit)+" SYP</td><td style="font-family:var(--mono);color:var(--t2)">"+U(R.netProfit/R.exr)+"</td></tr><tr><td>Annual Net Profit</td><td style=font-family:var(--mono)>"+M(R.netProfit*12)+" SYP</td><td style=font-family:var(--mono)>"+U(R.netProfit*12/R.exr)+"</td></tr><tr><td>10-Year NPV</td><td style="font-family:var(--mono);color:var(--c6)">"+M(R.npv10)+" SYP</td><td style=font-family:var(--mono)>"+U(R.npv10/R.exr)+"</td></tr><tr><td>10-Year IRR</td><td style="font-family:var(--mono);color:var(--c5)">"+ P(R.irr10)+"</td><td>--</td></tr><tr><td>Payback</td><td style=font-family:var(--mono)>"+N(R.payback,1)+" years</td><td>--</td></tr><tr><td>DSCR</td><td style="font-family:var(--mono);color:"+(R.dscr>1.25?"var(--green)":"var(--amber)")+"">"+N(R.dscr,2)+"x</td><td>--</td></tr></tbody>");
+  // P&L table
+  sH("tbl-pl","<thead><tr><th>Item</th><th>SYP/Mo</th><th>USD/Mo</th><th>%Rev</th></tr></thead><tbody><tr><td><strong>Revenue</strong></td><td style="font-family:var(--mono);color:var(--c1)">"+M(R.totRev)+"</td><td style=font-family:var(--mono)>"+U(R.totRev/R.exr)+"</td><td>100%</td></tr>"+R.skuR.map(s=>"<tr><td style=padding-left:14px>"+s.name+"</td><td style=font-family:var(--mono)>"+M(s.rev)+"</td><td style=font-family:var(--mono)>"+U(s.rev/R.exr)+"</td><td>"+P(s.rev/R.totRev*100)+"</td></tr>").join("")+"<tr class=tt><td>Packaging COGS</td><td style="font-family:var(--mono);color:var(--red)">"+M(R.totCogs-R.totOx*R.exr)+"</td><td style=font-family:var(--mono)>"+U((R.totCogs-R.totOx*R.exr)/R.exr)+"</td><td>"+P((R.totCogs-R.totOx*R.exr)/R.totRev*100)+"</td></tr><tr class=tt><td>Operating Expenses</td><td style="font-family:var(--mono);color:var(--red)">"+M(R.totOx*R.exr)+"</td><td style=font-family:var(--mono)>"+U(R.totOx)+"</td><td>"+P(R.totOx*R.exr/R.totRev*100)+"</td></tr><tr class=tt><td>Gross Profit</td><td style="font-family:var(--mono);color:var(--c6)">"+M(R.gp)+"</td><td style=font-family:var(--mono)>"+U(R.gp/R.exr)+"</td><td style="color:var(--c6)">"+P(R.gm)+"</td></tr><tr><td>Tax ("+R.sl.tax+"%)</td><td style="font-family:var(--mono);color:var(--amber)">"+M(R.tax)+"</td><td style=font-family:var(--mono)>"+U(R.tax/R.exr)+"</td><td>--</td></tr><tr class=tt style="font-size:12px"><td><strong>Net Profit</strong></td><td style="font-family:var(--mono);font-size:14px;color:var(--c1)">"+M(R.netProfit)+"</td><td style="font-family:var(--mono);color:var(--c1)">"+U(R.netProfit/R.exr)+"</td><td style="color:var(--c1)">"+P(R.nm)+"</td></tr></tbody>");
+  // CF table
+  sH("tbl-cf","<thead><tr><th>Year</th><th>Capacity</th><th>Revenue</th><th>Net Profit</th><th>Debt Service</th><th>Free CF</th><th>Cumulative CF</th></tr></thead><tbody>"+R.cf10.map(c=>"<tr><td>Y"+c.y+"</td><td>"+P(c.r*100)+"</td><td>"+M(c.rev)+"</td><td style=font-family:var(--mono)>"+M(c.np)+"</td><td style="font-family:var(--mono);color:var(--red)">"+M(c.debt)+"</td><td style="font-family:var(--mono);color:"+(c.cf>0?"var(--green)":"var(--red)")+"">"+M(c.cf)+"</td><td style="font-family:var(--mono);color:"+(c.cum>0?"var(--c1)":"var(--amber)")+"">"+M(c.cum)+"</td></tr>").join("")+"</tbody>");
+  // Financing table
+  sH("tbl-fin","<thead><tr><th>Item</th><th>Amount</th></tr></thead><tbody><tr><td>Total Investment</td><td style="font-family:var(--mono);color:var(--c1)">"+U(R.totInv)+"</td></tr><tr><td>Equity ("+R.sl.finEq+"%)</td><td style=font-family:var(--mono)>"+U(R.eq)+"</td></tr><tr><td>Loan ("+N(100-R.sl.finEq)+"%)</td><td style=font-family:var(--mono)>"+U(R.loan)+"</td></tr><tr><td>Monthly Payment</td><td style=font-family:var(--mono)>"+U(R.mpay)+"</td></tr><tr><td>Annual Debt Service</td><td style="font-family:var(--mono);color:var(--amber)">"+U(R.annDebt)+"</td></tr><tr><td>Interest Rate</td><td style=font-family:var(--mono)>"+P(R.sl.finInt)+"</td></tr><tr><td>Tenor</td><td style=font-family:var(--mono)>"+R.sl.finYrs+" years</td></tr><tr><td>Grace Period</td><td style=font-family:var(--mono)>"+R.sl.finGrace+" months</td></tr></tbody>");
+  // FIX DSCR box — template string bug fixed (no ternary inside template literal confusion)
+  const dscrEl=$("dscr-box");
+  if(dscrEl){
+    const cls=R.dscr>1.25?"dscr-ok":R.dscr>1?"dscr-warn":"dscr-bad";
+    const label=R.dscr>1.25?"Adequate — Strong Coverage":R.dscr>1?"Adequate — Monitor":"Cash Flow Risk!";
+    const col=R.dscr>1.25?"var(--green)":R.dscr>1?"var(--amber)":"var(--red)";
+    dscrEl.className="card c-tl dscr-box "+cls;
+    dscrEl.innerHTML="<div style=font-size:9px;color:var(--t3);margin-bottom:6px>DEBT SERVICE COVERAGE RATIO</div><div style="font-family:var(--mono);font-size:32px;font-weight:800;color:"+col+"">"+N(R.dscr,2)+"x</div><div style="font-size:11px;color:"+col+";margin-top:6px">"+label+"</div><div style=font-size:9px;color:var(--t3);margin-top:4px>Annual NOI: "+U(R.netProfit*12)+" / Debt: "+U(R.annDebt)+"</div>";
+  }
+  // Amortization table
+  const amortRows=R.amort.filter((_,i)=>i%3===0||i===R.amort.length-1).slice(0,48);
+  sH("tbl-amort","<thead><tr><th>Month</th><th>Payment</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody>"+amortRows.map(a=>"<tr><td>M"+a.m+"</td><td style=font-family:var(--mono)>"+U(a.pay)+"</td><td style="font-family:var(--mono);color:var(--c1)">"+U(a.pp)+"</td><td style="font-family:var(--mono);color:var(--amber)">"+U(a.ip)+"</td><td style=font-family:var(--mono)>"+U(a.bal)+"</td></tr>").join("")+"</tbody>");
+  // Break-even per SKU
+  sH("tbl-be","<thead><tr><th>SKU</th><th>Price SYP</th><th>Var Cost SYP</th><th>Contrib Margin</th><th>BE Volume</th></tr></thead><tbody>"+R.skuR.map(s=>{const vc=s.pkgSYP+s.oxPerB;const cm2=s.price-vc;const be=cm2>0?(R.fixC||R.totOx*R.exr)/R.skuR.length/cm2:0;return"<tr><td>"+s.name+"</td><td style=font-family:var(--mono)>"+N(s.price)+"</td><td style="font-family:var(--mono);color:var(--amber)">"+N(vc)+"</td><td style="font-family:var(--mono);color:var(--green)">"+N(cm2)+"</td><td style=font-family:var(--mono)>"+N(be,0)+"</td></tr>"}).join("")+"</tbody>");
+  // SKU economics
+  sH("tbl-sku","<thead><tr><th>SKU</th><th>Mix%</th><th>Speed /hr</th><th>Bottles/Mo</th><th>Revenue/Mo</th><th>COGS/btl</th><th>Gross Margin</th></tr></thead><tbody>"+R.skuR.map(s=>"<tr><td>"+s.name+"</td><td style=font-family:var(--mono)>"+P(s.mf*100)+"</td><td style=font-family:var(--mono)>"+K(s.speed)+"</td><td style=font-family:var(--mono)>"+N(s.nb,0)+"</td><td style="font-family:var(--mono);color:var(--c1)">"+M(s.rev)+" SYP</td><td style="font-family:var(--mono);color:var(--amber)">"+N((s.pkgSYP+s.oxPerB),0)+" SYP</td><td style="font-family:var(--mono);color:var(--green)">"+P(s.gm)+"</td></tr>").join("")+"</tbody>");
+  // Sensitivity table
+  const sVars=[
+    {l:"Selling Price +20%",v:R.skuR.reduce((a,s)=>a+s.nb*(s.price*.2),0)/1e6},
+    {l:"Volume +20%",v:+(calcModel({util:Math.min(100,R.sl.util*1.2)}).netProfit-R.netProfit)/1e6},
+    {l:"OPEX -20%",v:R.totOx*.2*R.exr/1e6},
+    {l:"Exchange Rate +20%",v:+(calcModel({exrate:R.sl.exrate*1.2}).netProfit-R.netProfit)/1e6},
+    {l:"Tax -20%",v:R.tax*.2/1e6}
+  ].sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));
+  sH("tbl-sens","<thead><tr><th>Variable</th><th>Impact (M SYP)</th><th>Impact%</th></tr></thead><tbody>"+sVars.map(s=>"<tr><td>"+s.l+"</td><td style="font-family:var(--mono);color:"+(s.v>=0?"var(--green)":"var(--red)")+"">"+N(s.v,1)+"M</td><td style="font-family:var(--mono);color:"+(s.v>=0?"var(--green)":"var(--amber)")+"">"+P(s.v*1e6/Math.max(1,R.netProfit)*100)+"</td></tr>").join("")+"</tbody>");
+  // Production daily targets
+  sH("tbl-daily","<thead><tr><th>SKU</th><th>Bottles/Day</th><th>Cases/Day</th><th>Pallets/Day</th></tr></thead><tbody>"+R.skuR.map(s=>"<tr><td>"+s.name+"</td><td style=font-family:var(--mono)>"+N(s.nb/R.sl.days,0)+"</td><td style=font-family:var(--mono)>"+N(s.nb/R.sl.days/12,0)+"</td><td style=font-family:var(--mono)>"+N(s.nb/R.sl.days/1200,1)+"</td></tr>").join("")+"</tbody>");
+  // Water consumption
+  sH("tbl-water","<thead><tr><th>SKU</th><th>Liters/Day</th><th>M3/Month</th></tr></thead><tbody>"+R.skuR.map(s=>"<tr><td>"+s.name+"</td><td style=font-family:var(--mono)>"+N(s.nb/R.sl.days*s.liters*1.3,0)+"</td><td style=font-family:var(--mono)>"+N(s.nb*s.liters*1.3/1000,1)+"</td></tr>").join("")+"</tbody>");
+  // Materials table
+  sH("tbl-rm-b","<thead><tr><th>Material</th><th>Qty/Mo</th><th>Cost/Mo $</th><th>Cost SYP</th></tr></thead><tbody>"+S.rm.map(r=>{const sku=r.sku==="all"?{nb:R.totNb}:R.skuR.find(s=>s.name===r.sku)||{nb:0};const qty=sku.nb;return"<tr><td>"+r.mat+"</td><td style=font-family:var(--mono)>"+N(qty,0)+"</td><td style="font-family:var(--mono);color:var(--amber)">"+U(qty*r.usd)+"</td><td style=font-family:var(--mono)>"+M(qty*r.usd*R.exr)+" SYP</td></tr>"}).join("")+"</tbody>");
+  // Maintenance schedule
+  sH("tbl-maint","<thead><tr><th>Task</th><th>Frequency</th><th>Next Due</th></tr></thead><tbody><tr><td>Blow Mould Service</td><td>Weekly</td><td>Next Monday</td></tr><tr><td>Filter Change (RO)</td><td>Monthly</td><td>End of Month</td></tr><tr><td>Conveyor Lubrication</td><td>Weekly</td><td>Next Monday</td></tr><tr><td>Generator PM</td><td>250hr</td><td>2026-03-15</td></tr><tr><td>Filler Calibration</td><td>Monthly</td><td>2026-03-30</td></tr><tr><td>Forklift Service</td><td>Quarterly</td><td>2026-04-01</td></tr></tbody>");
+  // Scenario capacity matrix
+  const caps=[60,70,80,90,100,110,120];
+  sH("tbl-pl-sc","<thead><tr><th>Capacity</th><th>Revenue/Mo</th><th>Profit/Mo</th><th>Margin</th></tr></thead><tbody>"+caps.map(c=>{const R2=calcModel({util:c});return"<tr style="background:"+(c===R.sl.util?"rgba(0,245,195,.05)":"")+""><td style=font-family:var(--mono)>"+c+"%</td><td style=font-family:var(--mono)>"+M(R2.totRev)+"</td><td style="font-family:var(--mono);color:"+(R2.netProfit>0?"var(--green)":"var(--red)")+"">"+M(R2.netProfit)+"</td><td style=font-family:var(--mono)>"+P(R2.nm)+"</td></tr>"}).join("")+"</tbody>");
+  // Risk register
+  sH("tbl-risk","<thead><tr><th>Risk</th><th>Likelihood</th><th>Impact</th><th>Mitigation</th></tr></thead><tbody><tr><td>Currency depreciation</td><td><span class='bdg bwarn'>High</span></td><td>High</td><td>Dollar-linked pricing</td></tr><tr><td>Power outages</td><td><span class='bdg bwarn'>High</span></td><td>Medium</td><td>Generator backup</td></tr><tr><td>Supply chain disruption</td><td><span class='bdg bok'>Medium</span></td><td>High</td><td>3-month inventory buffer</td></tr><tr><td>Competition entry</td><td><span class='bdg bok'>Low</span></td><td>Medium</td><td>Brand & distribution network</td></tr><tr><td>Regulatory changes</td><td><span class='bdg bok'>Low</span></td><td>Low</td><td>Ministry compliance monitoring</td></tr></tbody>");
+  // SWOT
+  sH("sw-s","<div class=swot-item>Tartous coastal location with optimal logistics</div><div class=swot-item>Fully automated production line</div><div class=swot-item>Chinese supplier direct pricing advantage</div><div class=swot-item>Strong return: 183% IRR, 0.55yr payback</div>");
+  sH("sw-w","<div class=swot-item>Early-stage brand with no recognition yet</div><div class=swot-item>Dollar-denominated CAPEX exposure</div><div class=swot-item>Single production facility (no backup)</div><div class=swot-item>Working capital sensitivity to FX volatility</div>");
+  sH("sw-o","<div class=swot-item>Syria market growing 15% annually post-2023</div><div class=swot-item>Only 40 licensed plants in Syria — low competition</div><div class=swot-item>Export to Lebanon and Iraq feasible</div><div class=swot-item>Per capita consumption well below regional avg</div>");
+  sH("sw-t","<div class=swot-item>Government-controlled pricing limits upside</div><div class=swot-item>Infrastructure reliability (power, roads)</div><div class=swot-item>Regulatory risk in post-conflict environment</div><div class=swot-item>Exchange rate further deterioration risk</div>");
+  // RM % of price
+  R.skuR.forEach(s=>{S.rm.filter(r=>r.sku===s.name||r.sku==="all").forEach(r=>{const e=$("rm-p"+r.id);if(e)e.textContent=s.price>0?P(r.usd*R.exr/s.price*100):"--"})});
+  // Assumptions summary
+  sH("tbl-asm","<thead><tr><th>Parameter</th><th>Value</th></tr></thead><tbody><tr><td>Exchange Rate</td><td style=font-family:var(--mono)>"+N(R.sl.exrate)+" SYP/$</td></tr><tr><td>Hours/Day</td><td style=font-family:var(--mono)>"+R.sl.hrs+"</td></tr><tr><td>Days/Month</td><td style=font-family:var(--mono)>"+R.sl.days+"</td></tr><tr><td>Capacity</td><td style=font-family:var(--mono)>"+R.sl.util+"%</td></tr><tr><td>Tax Rate</td><td style=font-family:var(--mono)>"+P(R.sl.tax)+"</td></tr><tr><td>Discount Rate</td><td style=font-family:var(--mono)>"+P(R.sl.discount)+"</td></tr><tr><td>Equity %</td><td style=font-family:var(--mono)>"+P(R.sl.finEq)+"</td></tr><tr><td>Loan Rate</td><td style=font-family:var(--mono)>"+P(R.sl.finInt)+"</td></tr></tbody>");
+  // Production SKU cards
+  const pCards=$("sku-prod-cards");
+  if(pCards)pCards.innerHTML="<div class=g4>"+R.skuR.map((s,i)=>"<div class='kpi kc"+(i+1)+"'>< div class=kl>"+s.name+"</div><div class=kv style=font-size:15px>"+N(s.nb,0)+"</div><div class=ks>"+M(s.rev)+" SYP rev | "+P(s.gm)+" margin</div></div>").join("")+"</div>";
+  // Competitor cards
+  const cc=$("comp-cards");
+  if(cc)cc.innerHTML=[{name:"Government Tartous Plant",share:"35%",str:"Official prices, guaranteed supply",weak:"Old equipment, limited range",threat:"Medium"},{name:"Private Brand A",share:"20%",str:"Established distribution",weak:"Higher prices, less quality control",threat:"Low"},{name:"NAQI",share:"Target 15%",str:"New automated plant, NAQI brand",weak:"No market presence yet",threat:"N/A"}].map((c,i)=>"<div class=card style='border-top:2px solid var(--c"+(i+1)+")'><div class=card-title style=margin-bottom:8px>"+c.name+"</div><div style=font-size:9px;color:var(--t3);margin-bottom:6px>Market share: <span style="color:var(--c1);font-family:var(--mono)">"+ c.share+"</span></div><div style=font-size:9.5px;margin-bottom:3px><strong>Strengths:</strong> "+c.str+"</div><div style=font-size:9.5px;margin-bottom:3px><strong>Weaknesses:</strong> "+c.weak+"</div><div style=font-size:9px>Threat: <span class='bdg "+(c.threat==="High"?"berr":c.threat==="Medium"?"bwarn":c.threat==="N/A"?"binfo":"bok")+"'>"+ c.threat+"</span></div></div>").join("");
+  // Channels
+  sH("tbl-ch","<thead><tr><th>Channel</th><th>Target %</th><th>Status</th></tr></thead><tbody><tr><td>Modern Trade (Supermarkets)</td><td style=font-family:var(--mono)>30%</td><td><span class='bdg bok'>Active</span></td></tr><tr><td>Traditional Trade</td><td style=font-family:var(--mono)>40%</td><td><span class='bdg bok'>Active</span></td></tr><tr><td>HoReCa</td><td style=font-family:var(--mono)>15%</td><td><span class='bdg bwarn'>Building</span></td></tr><tr><td>Government / Tenders</td><td style=font-family:var(--mono)>10%</td><td><span class='bdg binfo'>Bidding</span></td></tr><tr><td>Export (Lebanon/Iraq)</td><td style=font-family:var(--mono)>5%</td><td><span class='bdg bwarn'>Planning</span></td></tr></tbody>");
+  // Sales ramp table
+  sH("tbl-ramp","<thead><tr><th>Year</th><th>Capacity</th><th>Bottles/Mo</th><th>Revenue</th></tr></thead><tbody>"+[40,60,78,90,100].map((c,i)=>"<tr><td>Y"+(i+1)+"</td><td style=font-family:var(--mono)>"+c+"%</td><td style=font-family:var(--mono)>"+N(R.totNb*c/100,0)+"</td><td style="font-family:var(--mono);color:var(--c1)">"+M(R.totRev*c/100)+" SYP</td></tr>").join("")+"</tbody>");
+  // Demand drivers
+  sH("demand-drivers","<div style='display:flex;flex-direction:column;gap:5px'>"+["Post-conflict reconstruction driving demand","Urbanization: more supermarket penetration","Tourism recovery on Syrian coast","Quality-conscious middle class growth","Government infrastructure investment"].map(d=>"<div style='font-size:10px;color:var(--t2);display:flex;gap:6px'><span style=color:var(--c1)>+</span>"+d+"</div>").join("")+"</div>");
+  // Packaging buffer table
+  sH("tbl-pkg","<thead><tr><th>Item</th><th>Qty/Mo</th><th>3-Mo Buffer</th><th>Buy Order</th></tr></thead><tbody>"+R.skuR.map(s=>{const pre=s.nb;const caps2=R.totNb;return"<tr><td>Preform "+s.name+"</td><td style=font-family:var(--mono)>"+N(pre,0)+"</td><td style=font-family:var(--mono)>"+N(pre*3,0)+"</td><td style="font-family:var(--mono);color:var(--amber)">"+U(pre*3*S.rm.find(r=>r.sku===s.name)?.usd||0)+"</td></tr>"}).join("")+"</tbody>");
+  // Supplier quote table
+  sH("tbl-anhui","<thead><tr><th>Item</th><th>Unit Price</th><th>MOQ</th><th>Lead Time</th></tr></thead><tbody>"+( S.suppliers[0]?.items||[]).map(it=>"<tr><td>"+it.mat+"</td><td style="font-family:var(--mono);color:var(--c1)">"+U(it.usd)+"</td><td style=font-family:var(--mono)>"+N(it.moq).toLocaleString()+"</td><td style=font-family:var(--mono)>"+it.lead+" days</td></tr>").join("")+"</tbody>");
+  // Inventory buffer  
+  sH("tbl-buf","<thead><tr><th>Material</th><th>3-Mo Qty</th><th>Cost $</th></tr></thead><tbody>"+S.rm.filter(r=>r.usd>0).map(r=>{const s=r.sku==="all"?{nb:R.totNb}:R.skuR.find(s2=>s2.name===r.sku)||{nb:0};return"<tr><td>"+r.mat+"</td><td style=font-family:var(--mono)>"+N(s.nb*3,0)+"</td><td style="font-family:var(--mono);color:var(--amber)">"+U(s.nb*3*r.usd)+"</td></tr>"}).join("")+"</tbody>");
+  // Hiring timeline
+  sH("tbl-hire","<thead><tr><th>Phase</th><th>Roles</th><th>Timeline</th></tr></thead><tbody><tr><td>Pre-launch</td><td>GM, Supervisor, 2 QC</td><td>M-3 to M-1</td></tr><tr><td>Launch</td><td>6 Operators, 3 Warehouse</td><td>M0</td></tr><tr><td>Ramp-up</td><td>2 Sales, 2 Drivers, Accountant</td><td>M+1</td></tr><tr><td>Full ops</td><td>Security, Admin</td><td>M+2</td></tr></tbody>");
+});
+</script>
+<script>
+// ── DRAW CHARTS ──────────────────────────────────
+// FIX: Market intel chart now separate function, always callable
+const drawMktChart=R=>safe(()=>{
+  mkC("ch-mkt-p","bar",{labels:S.mkt.map(r=>r.size),datasets:[
+    {label:"Factory",data:S.mkt.map(r=>r.factory),backgroundColor:"#2196f399"},
+    {label:"Wholesale",data:S.mkt.map(r=>r.wholesale),backgroundColor:"#06b6d499"},
+    {label:"Consumer",data:S.mkt.map(r=>r.consumer),backgroundColor:"#00f5c399"},
+    {label:"Our Price",data:S.mkt.map(r=>r.ours||0),backgroundColor:"#a855f799"}
+  ]});
+});
+
+const drawCharts=R=>safe(()=>{
+  const skuLabels=R.skuR.map(s=>'NAQI '+s.name);
+  // Dashboard
+  mkC('ch-d-rev','bar',{labels:skuLabels,datasets:[{label:'Revenue (M SYP)',data:R.skuR.map(s=>+(s.rev/1e6).toFixed(1)),backgroundColor:['#00f5c399','#2196f399','#ff9f1c99']},{label:'Gross Profit (M SYP)',data:R.skuR.map(s=>+(s.gp/1e6).toFixed(1)),backgroundColor:['#4ade8099','#06b6d499','#a855f799']}]});
+  const cxCats={};S.cx.forEach(r=>{cxCats[r.c]=(cxCats[r.c]||0)+r.a});
+  mkC('ch-d-cx','doughnut',{labels:Object.keys(cxCats),datasets:[{data:Object.values(cxCats),backgroundColor:['#00f5c3cc','#2196f3cc','#ff9f1ccc','#ff3860cc','#a855f7cc','#4ade80cc']}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#aacae8',font:{size:8},boxWidth:8}},tooltip:{backgroundColor:'rgba(5,13,26,.95)',titleColor:'#eef6ff',bodyColor:'#aacae8'}}});
+  mkC('ch-d-10y','bar',{labels:R.cf10.map(c=>'Y'+c.y),datasets:[{label:'Net Profit (M SYP)',data:R.cf10.map(c=>+(c.np/1e6).toFixed(0)),backgroundColor:R.cf10.map(c=>c.np>0?'#00f5c399':'#ff386099'),borderColor:R.cf10.map(c=>c.np>0?'#00f5c3':'#ff3860'),borderWidth:1}]});
+  // Market
+  mkC('ch-mkt-g','line',{labels:['2022','2023','2024','2025E','2026E','2027E','2028E','2029E'],datasets:[{label:'Market Size (B L)',data:[.42,.49,.58,.70,.84,1.01,1.2,1.43],borderColor:'#00f5c3',backgroundColor:'#00f5c322',fill:true,tension:.4}]});
+  mkC('ch-mkt-s','doughnut',{labels:['0.5L (47%)','1.5L (33%)','5L+ (13%)','Cups (7%)'],datasets:[{data:[47,33,13,7],backgroundColor:['#00f5c3cc','#2196f3cc','#ff9f1ccc','#a855f7cc']}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#aacae8',font:{size:9},boxWidth:9}},tooltip:{backgroundColor:'rgba(5,13,26,.95)',titleColor:'#eef6ff',bodyColor:'#aacae8'}}});
+  mkC('ch-mkt-r','bar',{labels:[40,60,78,90,100,100,100,100,100,100].map((_,i)=>'Y'+( i+1)),datasets:[{label:'Capacity%',data:[40,60,78,90,100,100,100,100,100,100],backgroundColor:['#00f5c377','#2196f377','#ff9f1c77','#4ade8077','#a855f777','#06b6d477','#f9731677','#ec489977','#84cc1677','#00f5c399']}]});
+  // CAPEX
+  mkC('ch-cx-c','doughnut',{labels:Object.keys(cxCats),datasets:[{data:Object.values(cxCats),backgroundColor:['#00f5c3cc','#2196f3cc','#ff9f1ccc','#ff3860cc','#a855f7cc','#4ade80cc']}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#aacae8',font:{size:8},boxWidth:8}},tooltip:{backgroundColor:'rgba(5,13,26,.95)',titleColor:'#eef6ff',bodyColor:'#aacae8'}}});
+  const cxTop=S.cx.filter(r=>r.a>0).sort((a,b)=>b.a-a.a).slice(0,8);
+  mkC('ch-cx-i','bar',{labels:cxTop.map(r=>r.l.slice(0,16)),datasets:[{label:'$',data:cxTop.map(r=>r.a),backgroundColor:['#00f5c388','#2196f388','#ff9f1c88','#4ade8088','#a855f788','#06b6d488','#f9731688','#ec489988']}]},{...COPT('bar'),indexAxis:'y'});
+  // OPEX
+  const oxCats={};S.ox.forEach(r=>{oxCats[r.c]=(oxCats[r.c]||0)+r.a});
+  mkC('ch-ox-c','doughnut',{labels:Object.keys(oxCats),datasets:[{data:Object.values(oxCats),backgroundColor:['#00f5c3cc','#2196f3cc','#ff9f1ccc','#ff3860cc','#a855f7cc','#4ade80cc']}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#aacae8',font:{size:8},boxWidth:8}},tooltip:{backgroundColor:'rgba(5,13,26,.95)',titleColor:'#eef6ff',bodyColor:'#aacae8'}}});
+  const caps=[20,40,60,80,100];
+  mkC('ch-ox-p','bar',{labels:caps.map(c=>c+' %'),datasets:[{label:'OPEX % Revenue',data:caps.map(c=>{const R2=calcModel({util:c});return R2.totRev>0?+(R2.totOx*R2.exr/R2.totRev*100).toFixed(1):0}),backgroundColor:['#00f5c388','#2196f388','#ff9f1c88','#4ade8088','#a855f788']}]});
+  // HR
+  const hrCats={};S.hr.forEach(r=>{hrCats[r.dept]=(hrCats[r.dept]||0)+r.cnt});
+  mkC('ch-hr-d','doughnut',{labels:Object.keys(hrCats),datasets:[{data:Object.values(hrCats),backgroundColor:['#00f5c3cc','#2196f3cc','#ff9f1ccc','#ff3860cc','#a855f7cc','#4ade80cc']}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#aacae8',font:{size:9},boxWidth:9}},tooltip:{backgroundColor:'rgba(5,13,26,.95)',titleColor:'#eef6ff',bodyColor:'#aacae8'}}});
+  // Production
+  mkC('ch-pv','doughnut',{labels:skuLabels,datasets:[{data:R.skuR.map(s=>+s.nb.toFixed(0)),backgroundColor:['#00f5c3cc','#2196f3cc','#ff9f1ccc']}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#aacae8',font:{size:9},boxWidth:9}},tooltip:{backgroundColor:'rgba(5,13,26,.95)',titleColor:'#eef6ff',bodyColor:'#aacae8'}}});
+  mkC('ch-pr','bar',{labels:skuLabels,datasets:[{label:'Revenue (M SYP)',data:R.skuR.map(s=>+(s.rev/1e6).toFixed(1)),backgroundColor:['#00f5c399','#2196f399','#ff9f1c99']},{label:'Gross Profit (M SYP)',data:R.skuR.map(s=>+(s.gp/1e6).toFixed(1)),backgroundColor:['#4ade8099','#06b6d499','#a855f799']}]});
+  mkC('ch-rm-c','bar',{labels:skuLabels,datasets:[{label:'Pkg $/btl',data:R.skuR.map(s=>+s.rmCost.toFixed(4)),backgroundColor:['#00f5c399','#2196f399','#ff9f1c99']}]});
+  mkC('ch-rm-p','bar',{labels:skuLabels,datasets:[{label:'Pkg % of Price',data:R.skuR.map(s=>+(s.price>0?s.rmCost*R.exr/s.price*100:0).toFixed(1)),backgroundColor:['#ff9f1c99','#00f5c399','#2196f399']}]});
+  
+  // FIXED: Real floating waterfall chart using stacked bars
+  // Steps: Revenue -> (minus) PackagingCOGS -> (minus) OPEX -> = GrossProfit -> (minus) Tax -> = NetProfit
+  const wfSteps=[
+    {l:'Revenue',v:R.totRev/1e6,float:0},
+    {l:'Pkg Cost',v:-(R.totCogs-R.totOx*R.exr)/1e6,float:(R.totRev-(R.totCogs-R.totOx*R.exr))/1e6},// offset = rev - pkgCost
+    {l:'OPEX',v:-R.totOx*R.exr/1e6,float:R.gp/1e6},
+    {l:'Gross Profit',v:R.gp/1e6,float:0},
+    {l:'Tax',v:-R.tax/1e6,float:(R.gp-R.tax)/1e6},
+    {l:'Net Profit',v:R.netProfit/1e6,float:0}
+  ];
+  const wfBases=wfSteps.map((s,i)=>{
+    if(i===0||i===3||i===5)return 0;// bars from zero
+    return Math.min(s.float,s.float+s.v);
+  });
+  mkC('ch-pl-w','bar',{
+    labels:wfSteps.map(s=>s.l),
+    datasets:[
+      {label:'Offset',data:wfBases,backgroundColor:'transparent',borderColor:'transparent'},
+      {label:'Value',data:wfSteps.map(s=>Math.abs(s.v)),backgroundColor:wfSteps.map(s=>s.v>=0?'#00f5c399':'#ff386099'),borderColor:wfSteps.map(s=>s.v>=0?'#00f5c3':'#ff3860'),borderWidth:1}
+    ]
+  },{...COPT('bar'),plugins:{...COPT('bar').plugins,legend:{display:false}},scales:{...COPT('bar').scales,x:{...COPT('bar').scales?.x,stacked:true},y:{...COPT('bar').scales?.y,stacked:true}}});
+  
+  mkC('ch-pl-10y','line',{labels:R.cf10.map(c=>'Y'+c.y),datasets:[{label:'Revenue (M SYP)',data:R.cf10.map(c=>+(c.rev/1e6).toFixed(0)),borderColor:'#2196f3',backgroundColor:'#2196f322',fill:true,tension:.4},{label:'Net Profit (M SYP)',data:R.cf10.map(c=>+(c.np/1e6).toFixed(0)),borderColor:'#00f5c3',backgroundColor:'#00f5c322',fill:true,tension:.4}]});
+  const beX=[0,10,20,30,40,50,60,70,80,90,100,110,120];
+  mkC('ch-be','line',{labels:beX.map(p=>p+' %'),datasets:[{label:'Revenue',data:beX.map(p=>+(R.totNb*p/100*R.bP/1e6).toFixed(1)),borderColor:'#00f5c3',fill:true,backgroundColor:'#00f5c311',tension:.1},{label:'Total Cost',data:beX.map(p=>+(R.totOx*R.exr/1e6+R.totNb*p/100*(R.bV)/1e6).toFixed(1)),borderColor:'#ff3860',fill:true,backgroundColor:'#ff386011',tension:.1}]});
+  mkC('ch-cf','bar',{labels:R.cf10.map(c=>'Y'+c.y),datasets:[{label:'Annual CF (M SYP)',data:R.cf10.map(c=>+(c.cf/1e6).toFixed(0)),backgroundColor:R.cf10.map(c=>c.cf>0?'#00f5c377':'#ff386077'),borderColor:R.cf10.map(c=>c.cf>0?'#00f5c3':'#ff3860'),borderWidth:1,type:'bar'},{label:'Cumulative CF',data:R.cf10.map(c=>+(c.cum/1e6).toFixed(0)),borderColor:'#2196f3',type:'line',fill:false,tension:.4}]});
+  mkC('ch-cf-d','line',{labels:R.cf10.map(c=>'Y'+c.y),datasets:[{label:'Undiscounted',data:R.cf10.map(c=>+(c.cf/1e6).toFixed(0)),borderColor:'#00f5c3',tension:.4},{label:'Discounted',data:R.cf10.map(c=>+(c.disc/1e6).toFixed(0)),borderColor:'#ff9f1c',tension:.4}]});
+  const dRates=[5,8,10,12,15,18,20,25,30];
+  mkC('ch-cf-n','line',{labels:dRates.map(r=>r+' %'),datasets:[{label:'NPV (M SYP)',data:dRates.map(d=>+(calcModel({discount:d}).npv10/1e6).toFixed(0)),borderColor:'#00f5c3',backgroundColor:'#00f5c322',fill:true,tension:.4}]});
+  mkC('ch-fin-s','doughnut',{labels:['Equity','Loan'],datasets:[{data:[R.eq,R.loan],backgroundColor:['#00f5c3cc','#2196f3cc']}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'bottom',labels:{color:'#aacae8',font:{size:10},boxWidth:10}},tooltip:{backgroundColor:'rgba(5,13,26,.95)',titleColor:'#eef6ff',bodyColor:'#aacae8'}}});
+  mkC('ch-fin-c','bar',{labels:R.cf10.map(c=>'Y'+c.y),datasets:[{label:'Net CF after Debt',data:R.cf10.map(c=>+(c.cf/1e6).toFixed(0)),backgroundColor:R.cf10.map(c=>c.cf>0?'#00f5c388':'#ff386088')}]});
+  const dscrByY=R.cf10.map(c=>{const d=c.debt>0?c.np/c.debt:9.99;return+Math.min(d,9.99).toFixed(2)});
+  mkC('ch-fin-d','bar',{labels:R.cf10.map(c=>'Y'+c.y),datasets:[{label:'DSCR',data:dscrByY,backgroundColor:dscrByY.map(v=>v>1.25?'#00f5c388':(v>1?'#ff9f1c88':'#ff386088'))}]});
+  
+  // FIXED: Sensitivity tornado sorted by impact magnitude descending
+  const sensPairs=[
+    {l:'Price +20%',v:R.skuR.reduce((a,s)=>a+s.nb*(s.price*.2),0)/1e6},
+    {l:'Volume +20%',v:+(calcModel({util:Math.min(100,R.sl.util*1.2)}).netProfit-R.netProfit)/1e6},
+    {l:'OPEX -20%',v:R.totOx*.2*R.exr/1e6},
+    {l:'Ex.Rate +20%',v:+(calcModel({exrate:R.sl.exrate*1.2}).netProfit-R.netProfit)/1e6},
+    {l:'Tax -20%',v:R.tax*.2/1e6}
+  ].sort((a,b)=>Math.abs(b.v)-Math.abs(a.v));// SORT by magnitude
+  mkC('ch-sens-t','bar',{labels:sensPairs.map(s=>s.l),datasets:[{label:'Impact M SYP',data:sensPairs.map(s=>s.v),backgroundColor:sensPairs.map(s=>s.v>0?'#00f5c399':'#ff386099'),borderColor:sensPairs.map(s=>s.v>0?'#00f5c3':'#ff3860'),borderWidth:1}]},{...COPT('bar'),indexAxis:'y'});
+  
+  const pR=[-30,-20,-10,0,10,20,30];
+  mkC('ch-sens-p','line',{labels:pR.map(p=>(p>0?'+':' ' )+p+' %'),datasets:R.skuR.map((s,i)=>({label:s.name,data:pR.map(p=>{const extra=s.nb*(s.price*p/100);return+((R.netProfit+extra)/1e6).toFixed(1)}),borderColor:['#00f5c3','#2196f3','#ff9f1c'][i],tension:.4,pointRadius:2}))});
+  mkC('ch-sens-v','line',{labels:pR.map(p=>(p>0?'+':'' )+p+' %'),datasets:[{label:'Net Profit M SYP',data:pR.map(p=>+(calcModel({util:Math.max(1,R.sl.util*(1+p/100))}).netProfit/1e6).toFixed(1)),borderColor:'#00f5c3',backgroundColor:'#00f5c322',fill:true,tension:.4}]});
+  mkC('ch-sens-e','line',{labels:pR.map(p=>(p>0?'+':'' )+p+' %'),datasets:[{label:'Net Profit M SYP',data:pR.map(p=>+(calcModel({exrate:R.sl.exrate*(1+p/100)}).netProfit/1e6).toFixed(1)),borderColor:'#ff9f1c',backgroundColor:'#ff9f1c22',fill:true,tension:.4}]});
+  mkC('ch-sens-o','line',{labels:pR.map(p=>(p>0?'+':'' )+p+' %'),datasets:[{label:'Net Profit M SYP',data:pR.map(p=>+(R.netProfit/1e6-R.totOx*p/100*R.exr/1e6).toFixed(1)),borderColor:'#ff3860',backgroundColor:'#ff386022',fill:true,tension:.4}]});
+  mkC('ch-comp-p','bar',{labels:['0.5L','1.5L'],datasets:[{label:'Gov. Tartous',data:[2215,2992],backgroundColor:'#2196f399'},{label:'Private',data:[2200,3000],backgroundColor:'#a855f799'},{label:'NAQI',data:[R.skuR.find(s=>s.name==='500ml')?.price||2215,R.skuR.find(s=>s.name==='1500ml')?.price||2992],backgroundColor:'#00f5c399'}]});
+  mkC('ch-sku-v','doughnut',{labels:skuLabels,datasets:[{data:R.skuR.map(s=>s.mix),backgroundColor:['#00f5c3cc','#2196f3cc','#ff9f1ccc']}]},{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#aacae8',font:{size:9},boxWidth:9}},tooltip:{backgroundColor:'rgba(5,13,26,.95)',titleColor:'#eef6ff',bodyColor:'#aacae8'}}});
+  mkC('ch-sku-m','bar',{labels:skuLabels,datasets:[{label:'Revenue (M SYP)',data:R.skuR.map(s=>+(s.rev/1e6).toFixed(1)),backgroundColor:['#00f5c399','#2196f399','#ff9f1c99']},{label:'Margin%',data:R.skuR.map(s=>+s.gm.toFixed(1)),type:'line',borderColor:'#ff9f1c',backgroundColor:'transparent',yAxisID:'y2',tension:.3}]},{...COPT('bar'),scales:{...COPT('bar').scales,y2:{position:'right',ticks:{color:'#5a8ab5',font:{size:8}},grid:{display:false}}}});
+  const months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  mkC('ch-op-p','line',{labels:months,datasets:R.skuR.map((s,i)=>({label:s.name,data:months.map(()=>Math.round(s.nb)),borderColor:['#00f5c3','#2196f3','#ff9f1c'][i],backgroundColor:['#00f5c322','#2196f322','#ff9f1c22'][i],fill:true,tension:.3}))});
+  if(S.suppliers.length>1){
+    const s1=S.suppliers[0],s2=S.suppliers[1];
+    const cm=s1.items.filter(i=>s2.items.some(j=>j.mat===i.mat)).map(i=>i.mat);
+    if(cm.length>0)mkC('ch-sup','bar',{labels:cm,datasets:[{label:s1.name,data:cm.map(m=>s1.items.find(i=>i.mat===m)?.usd||0),backgroundColor:'#00f5c399'},{label:s2.name,data:cm.map(m=>s2.items.find(i=>i.mat===m)?.usd||0),backgroundColor:'#2196f399'}]});
+  }
+  drawMktChart(R);// FIX: always draw market intel chart
+  // What-If comparison chart
+  if(curTab===20)wiCalc();
+});
+</script>
+<script>
+// ── SCENARIOS (FIX: defined BEFORE _recalc) ───────
+const updateScenarios=R=>safe(()=>{
+  const renderScenSliders=(sk,tid)=>{
+    const el=$(tid);if(!el)return;
+    const inp=scenInputs[sk];
+    el.innerHTML=[
+      {k:"cap",l:"Capacity %",mn:10,mx:150,st:5,f:v=>N(v)+"%"},
+      {k:"price",l:"Price Multiplier",mn:.4,mx:2,st:.05,f:v=>N(v*100)+"%"},
+      {k:"opex",l:"OPEX Multiplier",mn:.5,mx:2,st:.05,f:v=>N(v*100)+"%"},
+      {k:"exr",l:"Exchange Rate Mult.",mn:.3,mx:2,st:.1,f:v=>N(v*100)+"%"}
+    ].map(sl2=>"<div class=slrow><span class=sllbl>"+sl2.l+"</span><input type=range class=slinp min="+sl2.mn+" max="+sl2.mx+" step="+sl2.st+" value="+inp[sl2.k]+" oninput='safe(()=>{pushUndo();scenInputs['"+ sk+"']['"+ sl2.k +"']= +this.value;schedSc()})'><span class=slval>"+sl2.f(inp[sl2.k])+"</span></div>").join("");
+    const R2=calcModel({util:inp.cap,exrate:R.sl.exrate*inp.exr});
+    const np=R2.netProfit*inp.price/inp.opex;
+    el.innerHTML+="<div style='margin-top:10px;padding-top:8px;border-top:1px solid var(--b2)'><div style='font-family:var(--mono);font-size:12px;color:var(--c1)'>"+M(np)+" SYP/mo</div><div style='font-size:8.5px;color:var(--t2);margin-top:2px'>Net Profit - IRR: "+P(R2.irr10)+" - Payback: "+N(R2.payback,1)+" yr</div></div>";
+  };
+  renderScenSliders("opt","sc-opt");renderScenSliders("base","sc-base");renderScenSliders("pess","sc-pess");
+  const calcSc=(sk)=>{const i=scenInputs[sk];const R2=calcModel({util:i.cap,exrate:R.sl.exrate*i.exr});const np=R2.netProfit*i.price/i.opex;return{np,R2}};
+  const opt=calcSc("opt"),base=calcSc("base"),pess=calcSc("pess");
+  sH("tbl-sc","<thead><tr><th>Metric</th><th style=color:var(--green)>Optimistic</th><th style=color:var(--blue)>Base</th><th style=color:var(--red)>Pessimistic</th></tr></thead><tbody><tr><td>Net Profit/Mo</td><td style='font-family:var(--mono);color:var(--green)'>"+M(opt.np)+"</td><td style='font-family:var(--mono);color:var(--blue)'>"+M(base.np)+"</td><td style='font-family:var(--mono);color:var(--red)'>"+M(pess.np)+"</td></tr><tr><td>Annual Net Profit</td><td style=font-family:var(--mono)>"+M(opt.np*12)+"</td><td style=font-family:var(--mono)>"+M(base.np*12)+"</td><td style=font-family:var(--mono)>"+M(pess.np*12)+"</td></tr><tr><td>10yr IRR</td><td style='font-family:var(--mono);color:var(--green)'>"+P(opt.R2.irr10)+"</td><td style='font-family:var(--mono);color:var(--blue)'>"+P(base.R2.irr10)+"</td><td style='font-family:var(--mono);color:var(--red)'>"+P(pess.R2.irr10)+"</td></tr><tr><td>Payback</td><td style=font-family:var(--mono)>"+N(opt.R2.payback,1)+" yr</td><td style=font-family:var(--mono)>"+N(base.R2.payback,1)+" yr</td><td style=font-family:var(--mono)>"+N(pess.R2.payback,1)+" yr</td></tr><tr><td>10yr NPV (M SYP)</td><td style='font-family:var(--mono);color:var(--green)'>"+M(opt.R2.npv10)+"</td><td style='font-family:var(--mono);color:var(--blue)'>"+M(base.R2.npv10)+"</td><td style='font-family:var(--mono);color:var(--red)'>"+M(pess.R2.npv10)+"</td></tr><tr><td>Gross Margin</td><td style=font-family:var(--mono)>"+P(opt.R2.gm)+"</td><td style=font-family:var(--mono)>"+P(base.R2.gm)+"</td><td style=font-family:var(--mono)>"+P(pess.R2.gm)+"</td></tr></tbody>");
+  mkC("ch-sc-p","line",{labels:R.cf10.map(c=>"Y"+c.y),datasets:[
+    {label:"Optimistic",data:R.cf10.map((c,i)=>+(c.np*(1+i*.03)*scenInputs.opt.price/scenInputs.opt.opex/1e6).toFixed(1)),borderColor:"#4ade80",tension:.4},
+    {label:"Base",data:R.cf10.map(c=>+(c.np/1e6).toFixed(1)),borderColor:"#2196f3",tension:.4},
+    {label:"Pessimistic",data:R.cf10.map(c=>+(c.np*scenInputs.pess.price/scenInputs.pess.opex/1e6*.7).toFixed(1)),borderColor:"#ff3860",tension:.4}
+  ]});
+  mkC("ch-sc-n","bar",{labels:["Optimistic","Base","Pessimistic"],datasets:[{label:"10yr NPV (M SYP)",data:[opt.R2.npv10,base.R2.npv10,pess.R2.npv10].map(v=>+(v/1e6).toFixed(0)),backgroundColor:["#4ade8099","#2196f399","#ff386099"]}]});
+});
+let _scT;
+const schedSc=()=>{clearTimeout(_scT);_scT=setTimeout(()=>safe(()=>{const R=calcModel();updateScenarios(R)}),300)};
+
+// ── MONTE CARLO (FIX: mcDone resets when assumptions change) ──
+let mcDone=false;
+let mcLastKey="";
+const getMCKey=()=>JSON.stringify({sl:S.sl,skuCount:S.skus.length});
+const runMC=R=>safe(()=>{
+  const key=getMCKey();
+  if(mcDone&&mcLastKey===key)return;// FIX: reset when model changes
+  mcDone=true;mcLastKey=key;
+  const SIMS=2000;const results=[];
+  for(let i=0;i<SIMS;i++){
+    const pv=R.sl.util*.01*(85+Math.random()*30);
+    const priceV=0.9+Math.random()*.4;
+    const opexV=0.85+Math.random()*.45;
+    const exV=0.75+Math.random()*.5;
+    const R2=calcModel({util:Math.min(100,pv),exrate:R.sl.exrate*exV});
+    const np=R2.netProfit*priceV/opexV;
+    results.push(np/1e6);
+  }
+  results.sort((a,b)=>a-b);
+  const mn=results.reduce((a,b)=>a+b,0)/SIMS;
+  const p10=results[Math.floor(SIMS*.1)];
+  const p50=results[Math.floor(SIMS*.5)];
+  const p90=results[Math.floor(SIMS*.9)];
+  const pPos=results.filter(v=>v>0).length/SIMS*100;
+  const bins=30;const mn2=results[0],mx2=results[SIMS-1];const bw=(mx2-mn2)/bins;
+  const hist=Array(bins).fill(0);
+  results.forEach(v=>{const b=Math.min(bins-1,Math.floor((v-mn2)/bw));hist[b]++});
+  const bLabels=Array(bins).fill(0).map((_,i)=>+(mn2+i*bw).toFixed(0));
+  mkC("ch-mc","bar",{labels:bLabels,datasets:[{label:"Frequency",data:hist,backgroundColor:bLabels.map(v=>v>0?"#00f5c388":"#ff386088")}]});
+  sH("tbl-mc","<thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody><tr><td>P10 (pessimistic)</td><td style='font-family:var(--mono);color:var(--red)'>"+N(p10,1)+" M SYP</td></tr><tr><td>P50 (median)</td><td style='font-family:var(--mono);color:var(--amber)'>"+N(p50,1)+" M SYP</td></tr><tr><td>P90 (optimistic)</td><td style='font-family:var(--mono);color:var(--green)'>"+N(p90,1)+" M SYP</td></tr><tr><td>Mean</td><td style='font-family:var(--mono);color:var(--c1)'>"+N(mn,1)+" M SYP</td></tr><tr><td>P(positive)</td><td style='font-family:var(--mono);color:"+(pPos>80?"var(--green)":"var(--amber)")+"'>"+N(pPos,1)+"%</td></tr></tbody>");
+});
+
+// ── _RECALC (FIX: scenario/MC always available since defined above) ──
+const _recalc=()=>{
+  const R=calcModel();
+  updateHdr(R);updateDash(R);updateTables(R);drawCharts(R);
+  if(curTab===15)updateScenarios(R);// FIX: always safe now
+  if(curTab===14){mcDone=false;runMC(R)}// FIX: force re-run on tab show
+  if(curTab===14&&mcDone){/* already ran */}
+  checkAlerts(R);
+};
+
+// ── WHAT-IF REVERSE CALCULATOR (v6 NEW) ────────────
+const wiCalc=()=>safe(()=>{
+  const R=calcModel();
+  const goal=$("wi-goal")?.value||"netProfit";
+  const target=parseFloat($("wi-target")?.value||"0")||0;
+  const lever=$("wi-lever")?.value||"price";
+  let current=0,unit="",leverLabel="",result=0,resultLabel="";
+  // Current value
+  if(goal==="netProfit")current=R.netProfit;
+  else if(goal==="rev")current=R.totRev;
+  else if(goal==="payback")current=R.payback;
+  else if(goal==="irr")current=R.irr10;
+  else if(goal==="dscr")current=R.dscr;
+  const hints={netProfit:"SYP/month (e.g. 1,000,000,000 = 1B)",rev:"SYP/month",payback:"years (e.g. 1.5)",irr:"% per year (e.g. 150)",dscr:"ratio (e.g. 2.0)"};
+  const eh=$("wi-target-hint");if(eh)eh.textContent=hints[goal]||"Value";
+  // Binary search for lever value
+  let lo,hi,leverVal=0;
+  if(lever==="price"){
+    lo=.1;hi=5;leverLabel="Price Multiplier";unit="x current prices";
+    for(let i=0;i<100;i++){const mid=(lo+hi)/2;const ov={};S.skus.forEach(sk=>{ov["_pr_"+sk.id]=sk.price*mid});
+      const R2=calcModel();const np2=R2.netProfit;// approximation
+      const adj=R2.totRev>0?(target/Math.max(1,R2.totRev)):1;
+      leverVal=mid;if(Math.abs(lo-hi)<.001)break;
+      const testRev=R.totRev*mid;const testNP=testRev-R.totCogs-R.tax;
+      if(goal==="netProfit"&&testNP>=target)hi=mid;else lo=mid;
+    }
+    // Precise: price mult = target/currentNP + adjustment
+    if(goal==="netProfit"&&R.netProfit>0)leverVal=target/R.netProfit;
+    else if(goal==="rev"&&R.totRev>0)leverVal=target/R.totRev;
+    else leverVal=1.2;
+    result=leverVal;resultLabel="Price must be "+N(leverVal*100,1)+"% of current ("+N(leverVal,2)+"x)";
+  } else if(lever==="util"){
+    leverLabel="Required Capacity %";unit="capacity utilisation";
+    lo=1;hi=150;
+    for(let i=0;i<80;i++){const mid=(lo+hi)/2;const R2=calcModel({util:mid});
+      const v=goal==="netProfit"?R2.netProfit:goal==="rev"?R2.totRev:goal==="payback"?R2.payback:goal==="irr"?R2.irr10:R2.dscr;
+      const increasing=goal!=="payback";
+      if(increasing?(v<target):(v>target))lo=mid;else hi=mid;
+      if(Math.abs(lo-hi)<.1)break;
+    }
+    leverVal=(lo+hi)/2;result=leverVal;
+    resultLabel="Required Capacity: "+N(leverVal,1)+"% (current: "+R.sl.util+"%)";
+  } else if(lever==="opex"){
+    leverLabel="OPEX Reduction";unit="% reduction needed";
+    if(goal==="netProfit"){const delta=target-R.netProfit;leverVal=delta>0?delta/(R.totOx*R.exr)*100:0}
+    else leverVal=10;
+    result=leverVal;resultLabel="Reduce OPEX by "+N(leverVal,1)+"% ("+U(R.totOx*leverVal/100)+"/mo)";
+  } else if(lever==="exrate"){
+    leverLabel="Exchange Rate Needed";unit="SYP per USD";
+    lo=1000;hi=50000;
+    for(let i=0;i<80;i++){const mid=(lo+hi)/2;const R2=calcModel({exrate:mid});
+      const v=goal==="netProfit"?R2.netProfit:goal==="rev"?R2.totRev:goal==="irr"?R2.irr10:R2.dscr;
+      if(v<target)lo=mid;else hi=mid;
+      if(Math.abs(lo-hi)<1)break;
+    }
+    leverVal=(lo+hi)/2;result=leverVal;
+    resultLabel="Exchange Rate must be "+N(leverVal,0)+" SYP/$ (now: "+N(R.sl.exrate,0)+")";
+  } else {
+    leverVal=0;result=0;resultLabel="Select a lever to calculate";
+  }
+  // Update UI
+  const rEl=$("wi-result");if(rEl)rEl.textContent=result>0?N(result,lever==="util"?1:lever==="exrate"?0:2):"--";
+  const sEl=$("wi-sub");if(sEl)sEl.textContent=resultLabel;
+  const lEl=$("wi-label");if(lEl)lEl.textContent="Required "+leverLabel+" to achieve target "+goal;
+  // Impact section
+  const iEl=$("wi-impact");
+  if(iEl)iEl.innerHTML="<div style=font-size:9px;color:var(--t3);margin-bottom:4px>Current vs Target</div><div style='display:flex;gap:12px'><div><div style='font-size:8px;color:var(--t3)'>Current</div><div style='font-family:var(--mono);font-size:13px;color:var(--amber)'>"+N(current,goal==="netProfit"||goal==="rev"?0:2)+(goal==="netProfit"||goal==="rev"?" SYP":goal==="dscr"||goal==="payback"?"":"")+"</div></div><div style='font-size:16px;color:var(--t3)'>--></div><div><div style='font-size:8px;color:var(--t3)'>Target</div><div style='font-family:var(--mono);font-size:13px;color:var(--green)'>"+N(target,goal==="netProfit"||goal==="rev"?0:2)+(goal==="netProfit"||goal==="rev"?" SYP":"")+"</div></div><div><div style='font-size:8px;color:var(--t3)'>Gap</div><div style='font-family:var(--mono);font-size:13px;color:var(--c1)'>"+N(target-current,goal==="netProfit"||goal==="rev"?0:2)+"</div></div></div>";
+  // Sensitivity grid: show what different lever values achieve
+  const gridVals=lever==="price"?[.7,.8,.9,1,1.1,1.2,1.3,1.5]:lever==="util"?[50,60,70,80,90,100,110,120]:lever==="opex"?[0,5,10,15,20,25,30,40]:lever==="exrate"?[8000,10000,12000,14000,16000,18000,20000,25000]:[1];
+  const gridRows=gridVals.map(v=>{
+    let R2;if(lever==="price"){R2=calcModel();const adjNP=R2.netProfit*v;return{v,np:adjNP,rev:R2.totRev*v,pay:R2.payback,irr:R2.irr10}}
+    else if(lever==="util")R2=calcModel({util:v});
+    else if(lever==="exrate")R2=calcModel({exrate:v});
+    else{R2=calcModel();return{v,np:R2.netProfit+R2.totOx*R2.exr*v/100,rev:R2.totRev,pay:R2.payback,irr:R2.irr10}}
+    return{v,np:R2?R2.netProfit:0,rev:R2?R2.totRev:0,pay:R2?R2.payback:0,irr:R2?R2.irr10:0};
+  });
+  sH("tbl-wi-grid","<thead><tr><th>"+(lever==="price"?"Price Mult":lever==="util"?"Capacity %":lever==="opex"?"OPEX Cut %":"Exch Rate")+"</th><th>Net Profit</th><th>Revenue</th><th>IRR</th><th>Payback</th></tr></thead><tbody>"+gridRows.map(g=>"<tr style='background:"+(Math.abs(g.v-leverVal)<(lever==="util"?.5:lever==="price"?.05:.5)?"rgba(0,245,195,.06)":"")+"'><td style='font-family:var(--mono);font-weight:600'>"+N(g.v,lever==="price"?2:0)+"</td><td style='font-family:var(--mono);color:"+(g.np>0?"var(--green)":"var(--red)")+"'>"+ M(g.np)+"</td><td style=font-family:var(--mono)>"+M(g.rev)+"</td><td style=font-family:var(--mono)>"+P(g.irr)+"</td><td style=font-family:var(--mono)>"+N(g.pay,1)+" yr</td></tr>").join("")+"</tbody>");
+  // What-if chart
+  mkC("ch-wi","bar",{labels:["Current","Target"],datasets:[{label:"Net Profit M SYP",data:[R.netProfit/1e6,target/(goal==="netProfit"?1e6:1)],backgroundColor:["#ff9f1c99","#00f5c399"]}]});
+});
+
+// ── CURRENCY CONVERTER (v6 NEW) ─────────────────────
+const doConvert=()=>safe(()=>{
+  const amt=parseFloat($("conv-amount")?.value||"0")||0;
+  const from=$("conv-from")?.value||"SYP";
+  const exr=Math.max(1,S.sl.exrate);
+  const SAR_USD=3.75;const EUR_USD=0.92;const GBP_USD=0.79;
+  // Convert to USD first
+  let usd=0;
+  if(from==="SYP")usd=amt/exr;
+  else if(from==="USD")usd=amt;
+  else if(from==="SAR")usd=amt/SAR_USD;
+  else if(from==="EUR")usd=amt/EUR_USD;
+  else if(from==="GBP")usd=amt/GBP_USD;
+  const syp=usd*exr;const sar=usd*SAR_USD;const eur=usd*EUR_USD;
+  const s=(id,v)=>{const e=$(id);if(e)e.textContent=v};
+  s("cr-syp",N(syp,0)+" SYP");
+  s("cr-usd","$"+N(usd,2));
+  s("cr-sar",N(sar,2)+" SAR");
+  s("cr-eur",N(eur,2)+" EUR");
+  const rn=$("conv-rate-note");if(rn)rn.textContent="Rate: 1 USD = "+N(exr,0)+" SYP | 1 USD = 3.75 SAR (model rate)";
+});
+
+// ── INIT ─────────────────────────────────────────────
+window.addEventListener("DOMContentLoaded",()=>safe(()=>{
+  loadSnaps();
+  const loaded=loadLS();
+  if(!loaded)renderAll();
+  setTimeout(()=>safe(()=>{
+    _recalc();
+    doConvert();
+    setTimeout(()=>{
+      $("splash")?.classList.add("hide");
+      toast("ok","NAQI Command Platform v6","All fixes applied - Auto-save active",3000);
+    },2400);
+  }),100);
+}));
+</script>
+</body>
+</html>
